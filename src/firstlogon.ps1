@@ -11,6 +11,9 @@ Remove-ItemProperty -LiteralPath $winlogon -Name 'AutoLogonCount' -ErrorAction '
 # --- Firewall once more, now that the service is fully up ---
 netsh.exe advfirewall set allprofiles state off
 
+# --- Windows Update service once more, in case setup re-enabled it ---
+reg.exe add 'HKLM\SYSTEM\CurrentControlSet\Services\wuauserv' /v Start /t REG_DWORD /d 4 /f
+
 # --- The internal disk must boot before the USB drive from now on ---
 bcdedit.exe /set '{fwbootmgr}' displayorder '{bootmgr}' /addfirst
 

@@ -13,7 +13,8 @@ reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" /v AUOpt
 reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate" /v ExcludeWUDriversInQualityUpdate /t REG_DWORD /d 1 /f
 reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Windows\DriverSearching" /v DontSearchWindowsUpdate /t REG_DWORD /d 1 /f
 reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\DriverSearching" /v SearchOrderConfig /t REG_DWORD /d 0 /f
-foreach ($service in 'wuauserv', 'UsoSvc') {
+# WaaSMedicSvc would otherwise re-enable wuauserv (seen in testing)
+foreach ($service in 'wuauserv', 'UsoSvc', 'WaaSMedicSvc') {
     reg.exe add "HKLM\SYSTEM\CurrentControlSet\Services\$service" /v Start /t REG_DWORD /d 4 /f
 }
 
@@ -24,11 +25,11 @@ reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protect
 # --- Power: best available performance plan, never sleep, never turn the display off ---
 $ultimate = 'e9a42b02-d5df-448d-aa00-03f14749eb61'
 $highPerformance = '8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c'
-$autoInstallerPlan = '2d4f9c1e-6a7b-4e3c-9f10-5a1b2c3d4e5f'
-powercfg.exe /duplicatescheme $ultimate $autoInstallerPlan
+$zeroTouchPlan = '2d4f9c1e-6a7b-4e3c-9f10-5a1b2c3d4e5f'
+powercfg.exe /duplicatescheme $ultimate $zeroTouchPlan
 if ($LASTEXITCODE -eq 0) {
-    powercfg.exe /changename $autoInstallerPlan 'AutoInstaller Performance'
-    powercfg.exe /setactive $autoInstallerPlan
+    powercfg.exe /changename $zeroTouchPlan 'ZeroTouch Performance'
+    powercfg.exe /setactive $zeroTouchPlan
 } else {
     powercfg.exe /setactive $highPerformance
 }

@@ -54,6 +54,18 @@ Bước nào lỗi thì ghi `FAIL` và làm tiếp; lọc `inventory.csv` theo c
 
 Script từ chối mọi ổ không phải USB, ổ hệ thống, ổ lớn hơn 256 GB, và bắt gõ lại số ổ trước khi xóa.
 
+## Tạo USB (trên macOS)
+
+Chuẩn bị giống bước 1 ở trên, cài thêm `wimlib` một lần: `brew install wimlib`.
+
+```bash
+diskutil list external physical                              # tìm USB, ví dụ disk2
+tools/make-usb.sh ~/Downloads/"tiny11 23H2 x64.iso" disk2    # XÓA SẠCH USB
+tools/make-usb.sh ~/Downloads/"tiny11 23H2 x64.iso" --stage ./out   # chỉ dựng nội dung USB vào thư mục, không đụng ổ nào
+```
+
+Cache image ở `~/Library/Caches/ZeroTouch`. Script từ chối ổ không phải USB gắn ngoài, ổ lớn hơn 256 GB, và bắt gõ lại mã ổ trước khi xóa.
+
 ## Cài máy
 
 Cắm USB → bật máy → (ổ trống nên tự boot USB; nếu không, chọn USB trong menu boot) → chờ đến khi Desktop có `HOAN-TAT.txt` hoặc `LOI.txt` → rút USB.
