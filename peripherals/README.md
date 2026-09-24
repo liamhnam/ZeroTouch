@@ -14,11 +14,11 @@ Dòng lệnh (thử nghiệm / tự động): `Peripherals.ps1 -Install xprinter
 | `sprt-80mm/driver/` | SPRT 80mm | `POS88EN.inf/.GPD` + `Drv2152s.cat` tách từ `SP-DRV2155Win.exe` | ✅ cài im lặng |
 | `hanel-hn212/` | Hanel HN212 (đọc CCCD) | `ReadIdCard\` (**không** kèm `Logs\` – chứa ảnh CCCD), `windowsdesktop-runtime-6.0.36-win-x64.exe`, `vcredist2015_2017_2019_2022_x64/x86.exe` | ✅ cài im lặng, tự chạy khi đăng nhập |
 | `barcode-icw97201/`, `barcode-zebra-ds9308/` | Máy quét mã 2D | – (chế độ bàn phím, driver có sẵn) | ✅ |
-| `epson-tm-t81/` | Epson TM-T81 | Bộ cài **Epson Advanced Printer Driver** cho đúng model (TM-T81 / T81II / T81III) từ epson.com — `*.exe` | ⏳ cần tải; chạy wizard Epson rồi tự đổi tên queue thành `XP-80C` |
-| `ricoh-fi-800r/` | Ricoh fi-800R | `PSIPTWAIN-*.exe` – PaperStream IP (TWAIN) từ [pfu.ricoh.com fi-800R](https://www.pfu.ricoh.com/global/scanners/fi/dl/win-11-fi-800r.html) | ⏳ cần tải; chạy wizard PFU |
-| `brother-ads-1300/` | Brother ADS-1300 | "Full Driver & Software Package" từ [support.brother.com](https://support.brother.com/g/b/downloadtop.aspx?c=us&lang=en&prod=ads1300_us_eu_as) — `*.exe` | ⏳ cần tải; chạy wizard Brother |
-| `avision-av332u/` | Avision AV332U | Driver TWAIN từ [avision.com](https://www.avision.com/en/download/3_av332u_latest/) — `*.exe` | ⏳ cần tải; chạy wizard Avision |
-| `brother-hl-l2361dn/` | Brother HL-L2361DN (in A4) | "Full Driver & Software Package" / "Printer Driver" từ [support.brother.com](https://support.brother.com/) (tìm "HL-L2361DN") — `*.exe` | ⏳ cần tải; chạy wizard Brother (giữ tên máy in riêng, không phải `XP-80C`) |
+| `epson-tm-t81/` | Epson TM-T81 | `apd\APD_513_T81II.exe` – Epson Advanced Printer Driver 5.13SA (South Asia) từ download-center.epson.com | ✅ wizard Epson (chọn TM-T81II, USB) rồi tự đổi tên queue thành `XP-80C` |
+| `ricoh-fi-800r/` | Ricoh fi-800R | `PSIPTWAIN-3_40_2.exe` – PaperStream IP (TWAIN) 3.40.2 từ [pfu.ricoh.com fi-800R](https://www.pfu.ricoh.com/global/scanners/fi/dl/win-11-fi-800r.html) | ✅ wizard PFU |
+| `brother-ads-1300/` | Brother ADS-1300 | `Y23B_C1_U_PP-inst-F1.EXE` – Full Driver & Software Package F1 từ [support.brother.com](https://support.brother.com/g/b/downloadtop.aspx?c=us&lang=en&prod=ads1300_us_eu_as) | ✅ wizard Brother |
+| `avision-av332u/` | Avision AV332U | `driver\` – TWAIN V6.21 (`AV332U_V6.21.09112026.zip` từ [avision.com](https://www.avision.com/en/download/?model=AV332U)) | ✅ cài im lặng (InstallShield `setup.iss`) |
+| `brother-hl-l2361dn/` | Brother HL-L2361DN (in A4) | `driver\32_64\BROHL13A.INF` – Printer Driver 1.11.0.0 (`Y14A_C1-hostm-1110.EXE` từ [support.brother.com](https://support.brother.com/g/b/downloadtop.aspx?c=vn&lang=en&prod=hll2361dn_as)) | ✅ cài im lặng; Windows tự tạo máy in khi cắm USB (tên riêng, không phải `XP-80C`) |
 
 Chỉ cần thả bộ cài vào đúng thư mục rồi tạo lại USB — không phải sửa script.
 
