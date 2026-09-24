@@ -7,8 +7,8 @@ secrets.env
 *.msi
 drivers/sdio/*
 !drivers/sdio/README.md
-drivers/winpe/*
-!drivers/winpe/README.md
+drivers/inject/**/*
+!drivers/inject/README.md
 
 .DS_Store
 __pycache__/

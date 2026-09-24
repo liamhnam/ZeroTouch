@@ -11,7 +11,7 @@
       AutoInstaller\apps\       apps\<name> (folders that contain install.ps1)
       AutoInstaller\sdio\       drivers\sdio (only if SDIO is present)
       AutoInstaller\wifi\       Wi-Fi profile generated from secrets.env
-      $WinPEDriver$\            drivers\winpe (only if it contains .inf files)
+      $WinPEDriver$\            drivers\inject (drivers added to Windows during setup, if any .inf)
     The converted image is cached in %LOCALAPPDATA%\ZeroTouch, so only the first run is slow.
 
 .EXAMPLE
@@ -88,7 +88,7 @@ $answerFile = Join-Path $Root 'dist\autounattend.xml'
 if (-not (Test-Path -LiteralPath $answerFile)) { throw "$answerFile is missing - run: python build.py" }
 $secrets = Read-Secrets (Join-Path $Root 'secrets.env')
 $hasSdio = [bool] (Get-ChildItem -LiteralPath (Join-Path $Root 'drivers\sdio') -Filter 'SDIO_x64_R*.exe' -ErrorAction 'SilentlyContinue')
-$hasWinPE = [bool] (Get-ChildItem -LiteralPath (Join-Path $Root 'drivers\winpe') -Filter '*.inf' -Recurse -ErrorAction 'SilentlyContinue')
+$injectInfs = @(Get-ChildItem -LiteralPath (Join-Path $Root 'drivers\inject') -Filter '*.inf' -Recurse -ErrorAction 'SilentlyContinue')
 $apps = @(Get-ChildItem -LiteralPath (Join-Path $Root 'apps') -Directory |
     Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName 'install.ps1') })
 
@@ -159,7 +159,7 @@ try {
     Write-Host "Apps:   $(if ($apps) { ($apps | ForEach-Object { $_.Name }) -join ', ' } else { 'none' })"
     Write-Host "SDIO:   $(if ($hasSdio) { 'yes' } else { 'NO - drivers will not be installed (see drivers\sdio\README.md)' })"
     Write-Host "Wi-Fi:  $(if ($secrets.WIFI_SSID) { $secrets.WIFI_SSID } else { 'none (secrets.env missing)' })"
-    Write-Host "WinPE:  $(if ($hasWinPE) { 'storage drivers included' } else { 'no extra storage drivers' })"
+    Write-Host "Inject: $(if ($injectInfs) { ($injectInfs | ForEach-Object { $_.Directory.Name } | Sort-Object -Unique) -join ', ' } else { 'none' })"
     Write-Host ''
     $disk | Get-Partition -ErrorAction 'SilentlyContinue' | Format-Table -AutoSize PartitionNumber, DriveLetter, Size, Type
     $answer = Read-Host "ALL DATA on disk $DiskNumber will be erased. Type the disk number to continue"
@@ -186,8 +186,8 @@ try {
         Write-Host 'Copying SDIO...'
         Copy-Tree (Join-Path $Root 'drivers\sdio') (Join-Path $usb 'AutoInstaller\sdio') @('README.md', '.gitignore')
     }
-    if ($hasWinPE) {
-        Copy-Tree (Join-Path $Root 'drivers\winpe') (Join-Path $usb '$WinPEDriver$') @('README.md', '.gitignore')
+    if ($injectInfs) {
+        Copy-Tree (Join-Path $Root 'drivers\inject') (Join-Path $usb '$WinPEDriver$') @('README.md', '.gitignore')
     }
     if ($secrets.WIFI_SSID) {
         $wifiDir = Join-Path $usb 'AutoInstaller\wifi'

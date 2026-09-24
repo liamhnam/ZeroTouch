@@ -12,7 +12,7 @@
 #   AutoInstaller/apps/       apps/<name> (folders that contain install.ps1)
 #   AutoInstaller/sdio/       drivers/sdio (only if SDIO is present)
 #   AutoInstaller/wifi/       Wi-Fi profile generated from secrets.env
-#   $WinPEDriver$/            drivers/winpe (only if it contains .inf files)
+#   $WinPEDriver$/            drivers/inject (drivers added to Windows during setup, if any .inf)
 #
 # Requires wimlib for the ESD -> WIM conversion: brew install wimlib
 # The converted image is cached in ~/Library/Caches/ZeroTouch, so only the first run is slow.
@@ -97,7 +97,7 @@ for dir in "$ROOT"/apps/*/; do
     [ -f "$dir/install.ps1" ] && apps+=("$(basename "$dir")")
 done
 has_sdio=0; ls "$ROOT"/drivers/sdio/SDIO_x64_R*.exe >/dev/null 2>&1 && has_sdio=1
-has_winpe=0; [ -n "$(find "$ROOT/drivers/winpe" -iname '*.inf' -print -quit)" ] && has_winpe=1
+has_inject=0; [ -n "$(find "$ROOT/drivers/inject" -iname '*.inf' -print -quit)" ] && has_inject=1
 secret() { [ -f "$ROOT/secrets.env" ] && sed -n "s/^[[:space:]]*$1[[:space:]]*=[[:space:]]*//p" "$ROOT/secrets.env" | tail -1 | sed 's/[[:space:]]*$//'; }
 wifi_ssid="$(secret WIFI_SSID || true)"
 
@@ -122,7 +122,7 @@ echo "Image:  $(for f in "${image_files[@]}"; do printf '%s ' "$(basename "$f")"
 echo "Apps:   ${apps[*]:-none}"
 echo "SDIO:   $([ $has_sdio = 1 ] && echo yes || echo 'NO - drivers will not be installed (see drivers/sdio/README.md)')"
 echo "Wi-Fi:  ${wifi_ssid:-none (secrets.env missing)}"
-echo "WinPE:  $([ $has_winpe = 1 ] && echo 'storage drivers included' || echo 'no extra storage drivers')"
+echo "Inject: $([ $has_inject = 1 ] && find "$ROOT/drivers/inject" -iname '*.inf' -exec dirname {} \; | xargs -n1 basename | sort -u | tr '\n' ' ' || echo none)"
 if [ -n "$DISK" ]; then
     echo "USB:    /dev/$DISK - $(field 'Device / Media Name'), $((size_bytes / 1000000000)) GB"
     echo
@@ -159,9 +159,9 @@ if [ $has_sdio = 1 ]; then
     mkdir -p "$target/AutoInstaller/sdio"
     rsync -r --progress --exclude '.gitignore' --exclude 'README.md' "$ROOT/drivers/sdio/" "$target/AutoInstaller/sdio/"
 fi
-if [ $has_winpe = 1 ]; then
+if [ $has_inject = 1 ]; then
     mkdir -p "$target/\$WinPEDriver\$"
-    rsync -r --exclude '.gitignore' --exclude 'README.md' "$ROOT/drivers/winpe/" "$target/\$WinPEDriver\$/"
+    rsync -r --exclude '.gitignore' --exclude 'README.md' "$ROOT/drivers/inject/" "$target/\$WinPEDriver\$/"
 fi
 if [ -n "$wifi_ssid" ]; then
     xml_escape() { sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' -e 's/"/\&quot;/g' -e "s/'/\&apos;/g"; }

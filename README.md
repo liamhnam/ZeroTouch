@@ -15,7 +15,7 @@ Dành cho máy kiosk/POS cài hàng loạt: Intel đời 9–14, không card đ�
 | Windows Update | Tắt (policy + dịch vụ + task tạm dừng), không tải driver qua Windows Update |
 | Nguồn | Ultimate Performance, không sleep, không tắt màn hình, không hibernate, không ngắt USB |
 | Vùng miền | Giao diện en-US, định dạng en-US, khu vực Việt Nam, UTC+7 |
-| Driver | SDIO chạy offline 2 lượt |
+| Driver | `drivers/inject` nạp thẳng vào Windows lúc cài (Mercusys MU6H), SDIO (nếu có) chạy thêm 2 lượt |
 | Wi-Fi | Kết nối mạng trong `secrets.env` sau khi có driver |
 | Phần mềm | UltraViewer (cài im lặng) |
 | Kết thúc | 1 dòng trong `inventory.csv` trên USB, log, file `HOAN-TAT.txt` hoặc `LOI.txt` trên Desktop, khởi động lại 1 lần |
@@ -42,7 +42,8 @@ Bước nào lỗi thì ghi `FAIL` và làm tiếp; lọc `inventory.csv` theo c
 
 1. Chuẩn bị (một lần):
    - `secrets.env`: chép từ `secrets.env.example`, điền Wi-Fi.
-   - `drivers\sdio\`: SDIO + gói driver + indexes (xem [drivers/sdio/README.md](drivers/sdio/README.md)).
+   - `drivers\inject\`: driver nạp sẵn vào Windows (Wi-Fi MU6H…) – xem [drivers/inject/README.md](drivers/inject/README.md).
+   - `drivers\sdio\` (tuỳ chọn): SDIO + gói driver + indexes – xem [drivers/sdio/README.md](drivers/sdio/README.md).
    - `apps\UltraViewer\UltraViewer_setup_*.exe`.
 2. Tìm số ổ USB: `Get-Disk`
 3. Tạo USB (**xóa sạch USB**):
@@ -83,7 +84,7 @@ Cột: `FinishedAt, InstalledAt, Result, FailedSteps, ComputerName, Serial, Manu
 - **Thêm phần mềm:** tạo `apps\<Tên>\` gồm bộ cài + `install.ps1` (`param([string] $AppDir, $Context)`, lỗi thì `throw`). Không cần build lại XML.
 - **Thêm bước:** thêm `payload\AutoInstaller\steps\NN-ten.ps1` trả về `@{ Status = 'OK'|'SKIP'|'FAIL'; Detail = '...' }`.
 - **Driver ngoại vi (giai đoạn 2):** `\AutoInstaller\peripherals\install.ps1` được bước `15-peripherals` gọi nếu tồn tại.
-- **Máy có Intel VMD/RST** (dừng với "No disk satisfied the given criteria"): tắt VMD trong BIOS hoặc đặt driver F6 vào `drivers\winpe\`.
+- **Máy có Intel VMD/RST** (dừng với "No disk satisfied the given criteria"): tắt VMD trong BIOS hoặc đặt driver F6 vào `drivers\inject\<tên>\`.
 
 ## Sửa file cài đặt (autounattend.xml)
 
@@ -104,9 +105,9 @@ python build.py        →  dist\autounattend.xml
 
 | Hiện tượng | Nguyên nhân / cách xử lý |
 |---|---|
-| WinPE dừng: *No disk satisfied the given criteria* | Không thấy ổ SATA/NVMe: bật AHCI, tắt Intel VMD/RST, hoặc thêm driver vào `drivers\winpe\` |
+| WinPE dừng: *No disk satisfied the given criteria* | Không thấy ổ SATA/NVMe: bật AHCI, tắt Intel VMD/RST, hoặc thêm driver vào `drivers\inject\` |
 | WinPE dừng: *Several disks (...) satisfied* | Máy có ≥2 ổ — rút bớt ổ hoặc cài tay |
 | WinPE dừng: *Cannot put Windows Boot Manager first* | Firmware ép boot USB trước — rút USB, bật lại máy |
 | `LOI.txt` trên Desktop | Xem bước `FAIL` trong file, log ở `C:\AutoInstaller\logs` và USB `\AutoInstaller\logs\<máy>-<giờ>` |
-| `WifiStatus = NO_ADAPTER` | SDIO không có driver cho USB Wi-Fi đó |
+| `WifiStatus = NO_ADAPTER` | Không có driver cho USB Wi-Fi đó: thêm vào `drivers\inject\` |
 | `WifiStatus = NOT_CONNECTED`, `Wifi5GHz = NO` | USB Wi-Fi không hỗ trợ 5 GHz |
