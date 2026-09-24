@@ -11,6 +11,7 @@
       AutoInstaller\apps\       apps\<name> (folders that contain install.ps1)
       AutoInstaller\sdio\       drivers\sdio (only if SDIO is present)
       AutoInstaller\wifi\       Wi-Fi profile generated from secrets.env
+      AutoInstaller\peripherals\ peripherals (tool to pick and install printers, scanners, readers)
       $WinPEDriver$\            drivers\inject (drivers added to Windows during setup, if any .inf)
     The converted image is cached in %LOCALAPPDATA%\ZeroTouch, so only the first run is slow.
 
@@ -145,6 +146,7 @@ try {
     $payloadFiles += $imageFiles
     foreach ($app in $apps) { $payloadFiles += Get-ChildItem -LiteralPath $app.FullName -Recurse -File }
     if ($hasSdio) { $payloadFiles += Get-ChildItem -LiteralPath (Join-Path $Root 'drivers\sdio') -Recurse -File }
+    $payloadFiles += Get-ChildItem -LiteralPath (Join-Path $Root 'peripherals') -Recurse -File
     $tooBig = @($payloadFiles | Where-Object { $_.Length -gt $Fat32Limit })
     if ($tooBig) { throw "Files over 4 GiB cannot be stored on FAT32:`n$($tooBig.FullName -join "`n")" }
     $needed = ($payloadFiles | Measure-Object -Property 'Length' -Sum).Sum + 100MB
@@ -182,6 +184,8 @@ try {
     Copy-Item -LiteralPath $answerFile -Destination (Join-Path $usb 'autounattend.xml')
     Copy-Tree (Join-Path $Root 'payload') $usb
     foreach ($app in $apps) { Copy-Tree $app.FullName (Join-Path $usb "AutoInstaller\apps\$($app.Name)") }
+    Write-Host 'Copying peripherals...'
+    Copy-Tree (Join-Path $Root 'peripherals') (Join-Path $usb 'AutoInstaller\peripherals') @('.gitignore')
     if ($hasSdio) {
         Write-Host 'Copying SDIO...'
         Copy-Tree (Join-Path $Root 'drivers\sdio') (Join-Path $usb 'AutoInstaller\sdio') @('README.md', '.gitignore')

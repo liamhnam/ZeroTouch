@@ -12,3 +12,8 @@ drivers/inject/**/*
 
 .DS_Store
 __pycache__/
+
+# Peripherals: keep the scripts, not the vendor binaries
+peripherals/*/**
+!peripherals/*/install.ps1
+!peripherals/*/README.md

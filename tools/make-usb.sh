@@ -12,6 +12,7 @@
 #   AutoInstaller/apps/       apps/<name> (folders that contain install.ps1)
 #   AutoInstaller/sdio/       drivers/sdio (only if SDIO is present)
 #   AutoInstaller/wifi/       Wi-Fi profile generated from secrets.env
+#   AutoInstaller/peripherals/ peripherals (tool to pick and install printers, scanners, readers)
 #   $WinPEDriver$/            drivers/inject (drivers added to Windows during setup, if any .inf)
 #
 # Requires wimlib for the ESD -> WIM conversion: brew install wimlib
@@ -102,7 +103,7 @@ secret() { [ -f "$ROOT/secrets.env" ] && sed -n "s/^[[:space:]]*$1[[:space:]]*=[
 wifi_ssid="$(secret WIFI_SSID || true)"
 
 # --- FAT32 and capacity checks ---
-check_paths=("$iso_mount" "${image_files[@]}" "$ROOT/apps")
+check_paths=("$iso_mount" "${image_files[@]}" "$ROOT/apps" "$ROOT/peripherals")
 [ $has_sdio = 1 ] && check_paths+=("$ROOT/drivers/sdio")
 big="$(find "${check_paths[@]}" -type f -size +"$FAT32_LIMIT"c ! -name 'install.esd' ! -name 'install.wim' 2>/dev/null || true)"
 for file in "${image_files[@]}"; do
@@ -112,6 +113,7 @@ done
 if [ -n "$DISK" ]; then
     need_kb=$(( $(du -sk "$iso_mount" | cut -f1) + $(du -skc "${image_files[@]}" | tail -1 | cut -f1) + 102400 ))
     [ $has_sdio = 1 ] && need_kb=$(( need_kb + $(du -sk "$ROOT/drivers/sdio" | cut -f1) ))
+    need_kb=$(( need_kb + $(du -sk "$ROOT/peripherals" "$ROOT/apps" | awk '{s+=$1} END {print s}') ))
     [ $((need_kb * 1024)) -lt "$size_bytes" ] || die "Not enough space: need ~$((need_kb / 1024)) MB"
 fi
 
@@ -154,6 +156,9 @@ for app in "${apps[@]}"; do
     mkdir -p "$target/AutoInstaller/apps/$app"
     rsync -r "$ROOT/apps/$app/" "$target/AutoInstaller/apps/$app/"
 done
+echo "Copying peripherals..."
+mkdir -p "$target/AutoInstaller/peripherals"
+rsync -r --exclude '.gitignore' "$ROOT/peripherals/" "$target/AutoInstaller/peripherals/"
 if [ $has_sdio = 1 ]; then
     echo "Copying SDIO..."
     mkdir -p "$target/AutoInstaller/sdio"

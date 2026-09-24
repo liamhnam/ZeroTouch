@@ -18,6 +18,7 @@ Dành cho máy kiosk/POS cài hàng loạt: Intel đời 9–14, không card đ�
 | Driver | `drivers/inject` nạp thẳng vào Windows lúc cài (Mercusys MU6H), SDIO (nếu có) chạy thêm 2 lượt |
 | Wi-Fi | Kết nối mạng trong `secrets.env` sau khi có driver |
 | Phần mềm | UltraViewer (cài im lặng) |
+| Thiết bị ngoại vi | Công cụ `Thiet bi ngoai vi` trên Desktop: tick máy in / máy scan / đầu đọc đang cắm → cài; máy in hóa đơn luôn tên `XP-80C`, mặc định – xem [peripherals/README.md](peripherals/README.md) |
 | Kết thúc | 1 dòng trong `inventory.csv` trên USB, log, file `HOAN-TAT.txt` hoặc `LOI.txt` trên Desktop, khởi động lại 1 lần |
 
 Bản quyền Windows: cài bằng key Pro chung (chưa kích hoạt), nhập key thật sau.
@@ -32,7 +33,7 @@ Specialize  computername.ps1 + specialize.ps1: tên máy, tường lửa, Update
 OOBE        bỏ qua toàn bộ → tài khoản GOODM
 First logon firstlogon.ps1: tự đăng nhập vĩnh viễn, ổ cứng lên đầu thứ tự boot
             → USB \AutoInstaller\postinstall.ps1 chạy steps\*.ps1 theo thứ tự:
-              10-drivers (SDIO) → 15-peripherals → 20-wifi → 30-apps
+              10-drivers (SDIO) → 15-peripherals (chép công cụ + shortcut) → 20-wifi → 30-apps
             → inventory.csv + log lên USB → khởi động lại → Desktop
 ```
 
@@ -83,7 +84,7 @@ Cột: `FinishedAt, InstalledAt, Result, FailedSteps, ComputerName, Serial, Manu
 
 - **Thêm phần mềm:** tạo `apps\<Tên>\` gồm bộ cài + `install.ps1` (`param([string] $AppDir, $Context)`, lỗi thì `throw`). Không cần build lại XML.
 - **Thêm bước:** thêm `payload\AutoInstaller\steps\NN-ten.ps1` trả về `@{ Status = 'OK'|'SKIP'|'FAIL'; Detail = '...' }`.
-- **Driver ngoại vi (giai đoạn 2):** `\AutoInstaller\peripherals\install.ps1` được bước `15-peripherals` gọi nếu tồn tại.
+- **Thêm thiết bị ngoại vi:** xem [peripherals/README.md](peripherals/README.md).
 - **Máy có Intel VMD/RST** (dừng với "No disk satisfied the given criteria"): tắt VMD trong BIOS hoặc đặt driver F6 vào `drivers\inject\<tên>\`.
 
 ## Sửa file cài đặt (autounattend.xml)
