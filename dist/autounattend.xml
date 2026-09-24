@@ -1,0 +1,771 @@
+<?xml version="1.0" encoding="utf-8"?>
+<unattend xmlns="urn:schemas-microsoft-com:unattend" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
+	<settings pass="offlineServicing"></settings>
+	<settings pass="windowsPE">
+		<component name="Microsoft-Windows-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+			<RunSynchronous>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>1</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:@echo off&amp;echo:call :print ^"Setting keyboard layout for PE session^"&amp;echo:wpeutil.exe SetKeyboardLayout 0409:00000409&amp;echo:for ^%^%d in (C D E F G H I J K L M N O P Q T U V X Y Z^) do ()</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>2</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:if exist ^%^%d:\sources\install.wim set ^"IMAGE_FILE=^%^%d:\sources\install.wim^"&amp;echo:if exist ^%^%d:\sources\install.esd set ^"IMAGE_FILE=^%^%d:\sources\install.esd^")</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>3</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:if exist ^%^%d:\sources\install.swm set ^"IMAGE_FILE=^%^%d:\sources\install.swm^" ^&amp; set ^"SWM_PARAM=/SWMFile:^%^%d:\sources\install*.swm^"&amp;echo:if exist ^%^%d:\autounattend.xml set ^"XML_FILE=^%^%d:\autounattend.xml^")</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>4</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:if exist ^%^%d:\$OEM$ set ^"OEM_FOLDER=^%^%d:\$OEM$^"&amp;echo:if exist ^%^%d:\$WinPEDriver$ set ^"PEDRIVERS_FOLDER=^%^%d:\$WinPEDriver$^"&amp;echo:^))</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>5</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:for /f ^"tokens=3^" ^%^%t in ('reg.exe query HKLM\System\Setup /v UnattendFile 2^^^&gt;nul'^) do ( if exist ^%^%t set ^"XML_FILE=^%^%t^" ^))</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>6</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:if not defined IMAGE_FILE call :fail ^"Could not locate install.wim, install.esd or install.swm.^"&amp;echo:if not defined XML_FILE call :fail ^"Could not locate autounattend.xml.^")</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>7</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:rem --- AutoInstaller guard: never reinstall over an unfinished installation ---&amp;echo:rem If the firmware boots this USB again while Windows Setup is still running on the)</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>8</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:rem internal disk (State.ini not yet IMAGE_STATE_COMPLETE^), hand control back to the&amp;echo:rem internal disk instead of wiping it again.&amp;echo:for ^%^%d in (C D E F G H I J K L M N O P Q R S T U V W Y Z^) do ()</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>9</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:if exist ^"^%^%d:\Windows\Setup\State\State.ini^" (&amp;echo:findstr /c:^"IMAGE_STATE_COMPLETE^" ^"^%^%d:\Windows\Setup\State\State.ini^" ^&gt;nul ^|^| set ^"PENDING_SETUP=^%^%d:^"&amp;echo:^)&amp;echo:^)&amp;echo:if defined PENDING_SETUP ()</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>10</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:call :print ^"Windows Setup is still in progress on ^%PENDING_SETUP^% - booting the internal disk instead of reinstalling^"&amp;echo:wpeutil.exe UpdateBootInfo)</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>11</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:bcdedit.exe /set {fwbootmgr} displayorder {bootmgr} /addfirst ^|^| call :fail ^"Cannot put Windows Boot Manager first. Unplug the USB drive.^"&amp;echo:bcdedit.exe /set {fwbootmgr} bootsequence {bootmgr}&amp;echo:wpeutil.exe reboot)</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>12</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:goto :hold&amp;echo:^)&amp;echo:set ^"OS_VERSION=11^"&amp;echo:for /f ^"tokens=3 delims=.^" ^%^%v in ('ver'^) do (&amp;echo:if ^%^%v LSS 20000 set ^"OS_VERSION=10^"&amp;echo:^)&amp;echo:if defined PEDRIVERS_FOLDER ()</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>13</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:call :print ^"Loading drivers from $WinPEDriver$ folder^"&amp;echo:for /R ^%PEDRIVERS_FOLDER^% ^%^%f IN (*.inf^) do drvload.exe ^"^%^%f^"&amp;echo:^)&amp;echo:^&gt;X:\target.vbs (&amp;echo:echo:Function Fail(message^^^))</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>14</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:echo:WScript.Echo message&amp;echo:echo:WScript.Quit 1&amp;echo:echo:End Function&amp;echo:echo:On Error Resume Next&amp;echo:echo:Set wmi = GetObject(^^^"winmgmts:\\.\root\cimv2^^^"^^^))</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>15</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:echo:Set drives = wmi.InstancesOf(^^^"Win32_DiskDrive^^^"^^^)&amp;echo:echo:If Err.Number ^^^&lt;^^^&gt; 0 Then&amp;echo:echo:Fail ^^^"Could not enumerate disks: ^^^" ^^^&amp; Err.Description&amp;echo:echo:End If)</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>16</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:echo:Set accepted = CreateObject(^^^"Scripting.Dictionary^^^"^^^)&amp;echo:echo:For Each drive In drives&amp;echo:echo:accept = True&amp;echo:echo:actual = drive.InterfaceType)</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>17</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:echo:If actual ^^^&lt;^^^&gt; ^^^"IDE^^^" And actual ^^^&lt;^^^&gt; ^^^"SCSI^^^" Then&amp;echo:echo:accept = False&amp;echo:echo:End If&amp;echo:echo:actual = drive.MediaType&amp;echo:echo:If actual ^^^&lt;^^^&gt; ^^^"Fixed hard disk media^^^" Then)</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>18</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:echo:accept = False&amp;echo:echo:End If&amp;echo:echo:If accept Then&amp;echo:echo:accepted.Add drive.Index, ^^^"^^^"&amp;echo:echo:End If&amp;echo:echo:Next&amp;echo:echo:If accepted.Count = 0 Then)</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>19</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:echo:Fail ^^^"No disk satisfied the given criteria.^^^"&amp;echo:echo:ElseIf accepted.Count ^^^&gt; 1 Then)</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>20</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:echo:Fail ^^^"Several disks (^^^" ^^^&amp; Join(accepted.Keys, ^^^", ^^^"^^^) ^^^&amp; ^^^"^^^) satisfied the given criteria.^^^"&amp;echo:echo:Else&amp;echo:echo:WScript.Echo Join(accepted.Keys^^^)&amp;echo:echo:WScript.Quit 0&amp;echo:echo:End If)</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>21</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:^)&amp;echo:call :print ^"Determining target disk^")</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>22</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:(cscript.exe //E:vbscript ^"X:\target.vbs^" //Nologo ^&gt;X:\target.out^) ^|^| (type X:\target.out ^&amp; call :fail ^"Could not determine target disk. Windows Setup will halt to avoid potential data loss.^"^))</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>23</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:for /f ^%^%t in (X:\target.out^) do set ^"TARGET_DISK=^%^%t^"&amp;echo:wpeutil.exe UpdateBootInfo&amp;echo:for /f ^"tokens=3^" ^%^%t in ('reg.exe query HKLM\System\CurrentControlSet\Control /v PEFirmwareType'^) do ()</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>24</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:if ^%^%t == 0x1 (&amp;echo:set ^"LAYOUT=MBR^"&amp;echo:set ^"FIRMWARE=BIOS^"&amp;echo:^) else if ^%^%t == 0x2 (&amp;echo:set ^"LAYOUT=GPT^"&amp;echo:set ^"FIRMWARE=UEFI^"&amp;echo:^) else (&amp;echo:call :fail ^"Unexpected PEFirmwareType value ^%^%t.^")</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>25</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:^)&amp;echo:^)&amp;echo:call :print ^"The computer is booted in ^%FIRMWARE^% mode, hence the target disk must be configured with the ^%LAYOUT^% partition layout^"&amp;echo:^&gt;X:\diskpart.txt (&amp;echo:echo:SELECT DISK=^%TARGET_DISK^%)</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>26</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:echo:CLEAN&amp;echo:echo:CONVERT GPT&amp;echo:echo:CREATE PARTITION EFI SIZE=300&amp;echo:echo:FORMAT QUICK FS=FAT32 LABEL=^"System^"&amp;echo:echo:ASSIGN LETTER=S&amp;echo:echo:CREATE PARTITION MSR SIZE=16&amp;echo:echo:CREATE PARTITION PRIMARY)</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>27</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:echo:FORMAT QUICK FS=NTFS LABEL=^"Windows^"&amp;echo:echo:ASSIGN LETTER=W&amp;echo:^)&amp;echo:call :print ^"diskpart will now wipe, partition and format disk ^%TARGET_DISK^%^")</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>28</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:diskpart.exe /s X:\diskpart.txt ^|^| call :fail ^"diskpart.exe encountered an error.^"&amp;echo:set ^"IMG_PARAM=/Index:1^"&amp;echo:call :print ^"Applying Windows image to target disk^")</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>29</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:dism.exe /Apply-Image /ImageFile:^%IMAGE_FILE^% ^%SWM_PARAM^% ^%IMG_PARAM^% /ApplyDir:W:\ /CheckIntegrity /Verify ^|^| call :fail ^"dism.exe encountered an error.^"&amp;echo:call :print ^"Making system partition bootable^")</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>30</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:bcdboot.exe W:\Windows /s S: ^|^| call :fail ^"bcdboot.exe encountered an error.^"&amp;echo:if ^%LAYOUT^% == GPT (&amp;echo:bcdedit.exe /set {fwbootmgr} bootsequence {bootmgr} ^|^| call :fail ^"bcdedit.exe encountered an error.^")</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>31</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:bcdedit.exe /set {fwbootmgr} displayorder {bootmgr} /addfirst&amp;echo:^)&amp;echo:call :print ^"Deleting winre.wim file to avoid creation of recovery partition^"&amp;echo:del W:\Windows\System32\Recovery\winre.wim)</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>32</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:call :print ^"Copying answer file to target disk^"&amp;echo:mkdir W:\Windows\Panther&amp;echo:copy ^%XML_FILE^% W:\Windows\Panther\unattend.xml&amp;echo:if defined PEDRIVERS_FOLDER ()</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>33</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:call :print ^"Adding drivers from $WinPEDriver$ folder to new installation^"&amp;echo:dism.exe /Add-Driver /Image:W:\ /Driver:^"^%PEDRIVERS_FOLDER^%^" /Recurse&amp;echo:^)&amp;echo:call :print ^"Setting time zone^")</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>34</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:dism.exe /Image:W:\ /Set-TimeZone:^"SE Asia Standard Time^"&amp;echo:call :print ^"Disabling Windows Defender^"&amp;echo:reg.exe LOAD HKLM\mount W:\Windows\System32\config\SYSTEM)</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>35</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:for ^%^%s in (Sense WdBoot WdFilter WdNisDrv WdNisSvc WinDefend^) do reg.exe ADD HKLM\mount\ControlSet001\Services\^%^%s /v Start /t REG_DWORD /d 4 /f&amp;echo:reg.exe UNLOAD HKLM\mount)</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>36</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:call :print ^"Setting device setup region to Vietnam (GeoID 251^)^"&amp;echo:reg.exe LOAD HKLM\mount W:\Windows\System32\config\SOFTWARE)</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>37</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:reg.exe ADD ^"HKLM\mount\Microsoft\Windows\CurrentVersion\Control Panel\DeviceRegion^" /v DeviceRegion /t REG_DWORD /d 251 /f&amp;echo:reg.exe UNLOAD HKLM\mount&amp;echo:call :print ^"Computer will now reboot^")</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>38</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:wpeutil.exe reboot&amp;echo:goto :eof&amp;echo::hold&amp;echo:ping.exe -n 30 127.0.0.1 ^&gt;nul&amp;echo:goto :hold&amp;echo::fail&amp;echo:echo:&amp;echo:echo:Fatal error: ^%~1&amp;echo:echo:&amp;echo:pause&amp;echo:exit 1&amp;echo::print&amp;echo:echo:)</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>39</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:echo:*** ^%~1 ***&amp;echo:echo:&amp;echo:goto :eof)</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>40</Order>
+					<Path>cmd.exe /c "X:\pe.cmd"</Path>
+				</RunSynchronousCommand>
+			</RunSynchronous>
+		</component>
+	</settings>
+	<settings pass="generalize"></settings>
+	<settings pass="specialize">
+		<component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+			<ComputerName>TEMPNAME</ComputerName>
+			<ProductKey>VK7JG-NPHTM-C97JM-9MPGT-3V66T</ProductKey>
+			<TimeZone>SE Asia Standard Time</TimeZone>
+		</component>
+		<component name="Microsoft-Windows-Deployment" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+			<RunSynchronous>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>1</Order>
+					<Path>powershell.exe -WindowStyle "Normal" -NoProfile -Command "$xml = [xml]::new(); $xml.Load('C:\Windows\Panther\unattend.xml'); $sb = [scriptblock]::Create( $xml.unattend.Extensions.ExtractScript ); Invoke-Command -ScriptBlock $sb -ArgumentList $xml;"</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>2</Order>
+					<Path>powershell.exe -WindowStyle "Normal" -ExecutionPolicy "Unrestricted" -NoProfile -File "C:\Windows\Setup\Scripts\Specialize.ps1"</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>3</Order>
+					<Path>reg.exe load "HKU\DefaultUser" "C:\Users\Default\NTUSER.DAT"</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>4</Order>
+					<Path>powershell.exe -WindowStyle "Normal" -ExecutionPolicy "Unrestricted" -NoProfile -File "C:\Windows\Setup\Scripts\DefaultUser.ps1"</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>5</Order>
+					<Path>reg.exe unload "HKU\DefaultUser"</Path>
+				</RunSynchronousCommand>
+			</RunSynchronous>
+		</component>
+	</settings>
+	<settings pass="auditSystem"></settings>
+	<settings pass="auditUser"></settings>
+	<settings pass="oobeSystem">
+		<component name="Microsoft-Windows-International-Core" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+			<InputLocale>0409:00000409</InputLocale>
+			<SystemLocale>en-US</SystemLocale>
+			<UILanguage>en-US</UILanguage>
+			<UserLocale>en-US</UserLocale>
+		</component>
+		<component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+			<UserAccounts>
+				<LocalAccounts>
+					<LocalAccount wcm:action="add">
+						<Name>GOODM</Name>
+						<DisplayName>GOODM</DisplayName>
+						<Group>Administrators</Group>
+						<Password>
+							<Value></Value>
+							<PlainText>true</PlainText>
+						</Password>
+					</LocalAccount>
+				</LocalAccounts>
+			</UserAccounts>
+			<AutoLogon>
+				<Username>GOODM</Username>
+				<Enabled>true</Enabled>
+				<LogonCount>1</LogonCount>
+				<Password>
+					<Value></Value>
+					<PlainText>true</PlainText>
+				</Password>
+			</AutoLogon>
+			<OOBE>
+				<ProtectYourPC>3</ProtectYourPC>
+				<HideEULAPage>true</HideEULAPage>
+				<HideWirelessSetupInOOBE>true</HideWirelessSetupInOOBE>
+				<HideOnlineAccountScreens>false</HideOnlineAccountScreens>
+			</OOBE>
+			<FirstLogonCommands>
+				<SynchronousCommand wcm:action="add">
+					<Order>1</Order>
+					<CommandLine>powershell.exe -WindowStyle "Normal" -ExecutionPolicy "Unrestricted" -NoProfile -File "C:\Windows\Setup\Scripts\FirstLogon.ps1"</CommandLine>
+				</SynchronousCommand>
+			</FirstLogonCommands>
+		</component>
+	</settings>
+	<Extensions xmlns="https://schneegans.de/windows/unattend-generator/">
+		<Build>
+			<Commit>
+				<Hash>538f930aeea9c3d51fdd0b4822e2d076fef999e8</Hash>
+				<GitHubUrl>https://github.com/cschneegans/unattend-generator/commit/538f930aeea9c3d51fdd0b4822e2d076fef999e8</GitHubUrl>
+			</Commit>
+			<PEScriptCopy>
+@echo off
+
+call :print "Setting keyboard layout for PE session"
+wpeutil.exe SetKeyboardLayout 0409:00000409
+
+for %%d in (C D E F G H I J K L M N O P Q T U V X Y Z) do (
+    if exist %%d:\sources\install.wim set "IMAGE_FILE=%%d:\sources\install.wim"
+    if exist %%d:\sources\install.esd set "IMAGE_FILE=%%d:\sources\install.esd"
+    if exist %%d:\sources\install.swm set "IMAGE_FILE=%%d:\sources\install.swm" &amp; set "SWM_PARAM=/SWMFile:%%d:\sources\install*.swm"
+    if exist %%d:\autounattend.xml set "XML_FILE=%%d:\autounattend.xml"
+    if exist %%d:\$OEM$ set "OEM_FOLDER=%%d:\$OEM$"
+    if exist %%d:\$WinPEDriver$ set "PEDRIVERS_FOLDER=%%d:\$WinPEDriver$"
+)
+for /f "tokens=3" %%t in ('reg.exe query HKLM\System\Setup /v UnattendFile 2^&gt;nul') do ( if exist %%t set "XML_FILE=%%t" )
+if not defined IMAGE_FILE call :fail "Could not locate install.wim, install.esd or install.swm."
+if not defined XML_FILE call :fail "Could not locate autounattend.xml."
+
+rem --- AutoInstaller guard: never reinstall over an unfinished installation ---
+rem If the firmware boots this USB again while Windows Setup is still running on the
+rem internal disk (State.ini not yet IMAGE_STATE_COMPLETE), hand control back to the
+rem internal disk instead of wiping it again.
+for %%d in (C D E F G H I J K L M N O P Q R S T U V W Y Z) do (
+    if exist "%%d:\Windows\Setup\State\State.ini" (
+        findstr /c:"IMAGE_STATE_COMPLETE" "%%d:\Windows\Setup\State\State.ini" &gt;nul || set "PENDING_SETUP=%%d:"
+    )
+)
+if defined PENDING_SETUP (
+    call :print "Windows Setup is still in progress on %PENDING_SETUP% - booting the internal disk instead of reinstalling"
+    wpeutil.exe UpdateBootInfo
+    bcdedit.exe /set {fwbootmgr} displayorder {bootmgr} /addfirst || call :fail "Cannot put Windows Boot Manager first. Unplug the USB drive."
+    bcdedit.exe /set {fwbootmgr} bootsequence {bootmgr}
+    wpeutil.exe reboot
+    goto :hold
+)
+
+set "OS_VERSION=11"
+for /f "tokens=3 delims=." %%v in ('ver') do (
+    if %%v LSS 20000 set "OS_VERSION=10"
+)
+
+if defined PEDRIVERS_FOLDER (
+    call :print "Loading drivers from $WinPEDriver$ folder"
+    for /R %PEDRIVERS_FOLDER% %%f IN (*.inf) do drvload.exe "%%f"
+)
+
+&gt;X:\target.vbs (
+    echo:Function Fail(message^)
+    echo:WScript.Echo message
+    echo:WScript.Quit 1
+    echo:End Function
+    echo:On Error Resume Next
+    echo:Set wmi = GetObject(^"winmgmts:\\.\root\cimv2^"^)
+    echo:Set drives = wmi.InstancesOf(^"Win32_DiskDrive^"^)
+    echo:If Err.Number ^&lt;^&gt; 0 Then
+    echo:Fail ^"Could not enumerate disks: ^" ^&amp; Err.Description
+    echo:End If
+    echo:Set accepted = CreateObject(^"Scripting.Dictionary^"^)
+    echo:For Each drive In drives
+    echo:accept = True
+    echo:actual = drive.InterfaceType
+    echo:If actual ^&lt;^&gt; ^"IDE^" And actual ^&lt;^&gt; ^"SCSI^" Then
+    echo:accept = False
+    echo:End If
+    echo:actual = drive.MediaType
+    echo:If actual ^&lt;^&gt; ^"Fixed hard disk media^" Then
+    echo:accept = False
+    echo:End If
+    echo:If accept Then
+    echo:accepted.Add drive.Index, ^"^"
+    echo:End If
+    echo:Next
+    echo:If accepted.Count = 0 Then
+    echo:Fail ^"No disk satisfied the given criteria.^"
+    echo:ElseIf accepted.Count ^&gt; 1 Then
+    echo:Fail ^"Several disks (^" ^&amp; Join(accepted.Keys, ^", ^"^) ^&amp; ^"^) satisfied the given criteria.^"
+    echo:Else
+    echo:WScript.Echo Join(accepted.Keys^)
+    echo:WScript.Quit 0
+    echo:End If
+)
+
+call :print "Determining target disk"
+(cscript.exe //E:vbscript "X:\target.vbs" //Nologo &gt;X:\target.out) || (type X:\target.out &amp; call :fail "Could not determine target disk. Windows Setup will halt to avoid potential data loss.")
+for /f %%t in (X:\target.out) do set "TARGET_DISK=%%t"
+
+wpeutil.exe UpdateBootInfo
+for /f "tokens=3" %%t in ('reg.exe query HKLM\System\CurrentControlSet\Control /v PEFirmwareType') do (
+    if %%t == 0x1 (
+        set "LAYOUT=MBR"
+        set "FIRMWARE=BIOS"
+    ) else if %%t == 0x2 (
+        set "LAYOUT=GPT"
+        set "FIRMWARE=UEFI"
+    ) else (
+        call :fail "Unexpected PEFirmwareType value %%t."
+    )
+)
+call :print "The computer is booted in %FIRMWARE% mode, hence the target disk must be configured with the %LAYOUT% partition layout"
+&gt;X:\diskpart.txt (
+    echo:SELECT DISK=%TARGET_DISK%
+    echo:CLEAN
+    echo:CONVERT GPT
+    echo:CREATE PARTITION EFI SIZE=300
+    echo:FORMAT QUICK FS=FAT32 LABEL="System"
+    echo:ASSIGN LETTER=S
+    echo:CREATE PARTITION MSR SIZE=16
+    echo:CREATE PARTITION PRIMARY
+    echo:FORMAT QUICK FS=NTFS LABEL="Windows"
+    echo:ASSIGN LETTER=W
+)
+
+call :print "diskpart will now wipe, partition and format disk %TARGET_DISK%"
+diskpart.exe /s X:\diskpart.txt || call :fail "diskpart.exe encountered an error."
+
+set "IMG_PARAM=/Index:1"
+call :print "Applying Windows image to target disk"
+dism.exe /Apply-Image /ImageFile:%IMAGE_FILE% %SWM_PARAM% %IMG_PARAM% /ApplyDir:W:\ /CheckIntegrity /Verify || call :fail "dism.exe encountered an error."
+
+call :print "Making system partition bootable"
+bcdboot.exe W:\Windows /s S: || call :fail "bcdboot.exe encountered an error."
+if %LAYOUT% == GPT (
+    bcdedit.exe /set {fwbootmgr} bootsequence {bootmgr} || call :fail "bcdedit.exe encountered an error."
+    bcdedit.exe /set {fwbootmgr} displayorder {bootmgr} /addfirst
+)
+
+call :print "Deleting winre.wim file to avoid creation of recovery partition"
+del W:\Windows\System32\Recovery\winre.wim
+
+call :print "Copying answer file to target disk"
+mkdir W:\Windows\Panther
+copy %XML_FILE% W:\Windows\Panther\unattend.xml
+
+if defined PEDRIVERS_FOLDER (
+    call :print "Adding drivers from $WinPEDriver$ folder to new installation"
+    dism.exe /Add-Driver /Image:W:\ /Driver:"%PEDRIVERS_FOLDER%" /Recurse
+)
+
+call :print "Setting time zone"
+dism.exe /Image:W:\ /Set-TimeZone:"SE Asia Standard Time"
+
+call :print "Disabling Windows Defender"
+reg.exe LOAD HKLM\mount W:\Windows\System32\config\SYSTEM
+for %%s in (Sense WdBoot WdFilter WdNisDrv WdNisSvc WinDefend) do reg.exe ADD HKLM\mount\ControlSet001\Services\%%s /v Start /t REG_DWORD /d 4 /f
+reg.exe UNLOAD HKLM\mount
+
+call :print "Setting device setup region to Vietnam (GeoID 251)"
+reg.exe LOAD HKLM\mount W:\Windows\System32\config\SOFTWARE
+reg.exe ADD "HKLM\mount\Microsoft\Windows\CurrentVersion\Control Panel\DeviceRegion" /v DeviceRegion /t REG_DWORD /d 251 /f
+reg.exe UNLOAD HKLM\mount
+
+call :print "Computer will now reboot"
+wpeutil.exe reboot
+goto :eof
+
+:hold
+ping.exe -n 30 127.0.0.1 &gt;nul
+goto :hold
+
+:fail
+echo:
+echo:Fatal error: %~1
+echo:
+pause
+exit 1
+
+:print
+echo:
+echo:*** %~1 ***
+echo:
+goto :eof
+		</PEScriptCopy>
+		</Build>
+		<ExtractScript>
+param(
+    [xml] $Document
+);
+
+foreach( $file in $Document.unattend.Extensions.File ) {
+    $path = [System.Environment]::ExpandEnvironmentVariables( $file.GetAttribute( 'path' ) );
+    mkdir -Path( $path | Split-Path -Parent ) -ErrorAction 'SilentlyContinue';
+    $encoding = switch( [System.IO.Path]::GetExtension( $path ) ) {
+        { $_ -in '.ps1', '.xml' } { [System.Text.Encoding]::UTF8; }
+        { $_ -in '.reg', '.vbs', '.js' } { [System.Text.UnicodeEncoding]::new( $false, $true ); }
+        default { [System.Text.Encoding]::Default; }
+    };
+    $bytes = $encoding.GetPreamble() + $encoding.GetBytes( $file.InnerText.Trim() );
+    [System.IO.File]::WriteAllBytes( $path, $bytes );
+}
+		</ExtractScript>
+		<File path="C:\Windows\Setup\Scripts\GetComputerName.ps1">
+# Evaluated by Windows Setup; must return a valid computer name (max 15 characters).
+# GOODM-&lt;last 9 characters of the BIOS serial&gt;, or GOODM-&lt;last 6 of the onboard MAC&gt;
+# when the serial is a placeholder such as "To be filled by O.E.M.".
+$prefix = 'GOODM-'
+$maxSuffix = 15 - $prefix.Length
+
+$serial = [string] (Get-CimInstance -ClassName 'Win32_BIOS').SerialNumber
+$placeholder = '^\s*(to be filled|default string|system serial number|chassis serial number|not applicable|none|n/?a|oem|0+|1234567890?|123456789|x+)\s*$'
+$suffix = ($serial -replace '[^A-Za-z0-9]', '').ToUpper()
+if ($serial -match $placeholder -or $suffix.Length -lt 4) {
+    $adapter = Get-CimInstance -ClassName 'Win32_NetworkAdapter' -Filter 'PhysicalAdapter = TRUE' |
+        Where-Object { $_.MACAddress } |
+        Sort-Object -Property @{ Expression = { $_.PNPDeviceID -notlike 'PCI\*' } }, 'DeviceID' |
+        Select-Object -First 1
+    if ($adapter) {
+        $mac = $adapter.MACAddress -replace '[^A-Fa-f0-9]', ''
+        $suffix = $mac.Substring($mac.Length - 6).ToUpper()
+    } else {
+        $suffix = '{0:X6}' -f (Get-Random -Minimum 0 -Maximum 0xFFFFFF)
+    }
+}
+if ($suffix.Length -gt $maxSuffix) {
+    $suffix = $suffix.Substring($suffix.Length - $maxSuffix)
+}
+return "$prefix$suffix"
+		</File>
+		<File path="C:\Windows\Setup\Scripts\SetComputerName.ps1">
+$ErrorActionPreference = 'Stop';
+Set-StrictMode -Version 'Latest';
+&amp; {
+	$newName = ( Get-Content -LiteralPath 'C:\Windows\Setup\Scripts\ComputerName.txt' -Raw ).Trim();
+	if( [string]::IsNullOrWhitespace( $newName ) ) {
+		throw "No computer name was provided.";
+	}
+
+	$keys = @(
+		@{
+			LiteralPath = 'Registry::HKLM\SYSTEM\CurrentControlSet\Control\ComputerName\ComputerName';
+			Name = 'ComputerName';
+		};
+		@{
+			LiteralPath = 'Registry::HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters';
+			Name = 'Hostname';
+		};
+		@{
+			LiteralPath = 'Registry::HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters';
+			Name = 'NV Hostname';
+		};
+	);
+
+	while( $true ) {
+		foreach( $key in $keys ) {
+			Set-ItemProperty @key -Type 'String' -Value $newName;
+		}
+		Start-Sleep -Milliseconds 50;
+	}
+} *&gt;&amp;1 | Out-String -Width 1KB -Stream &gt;&gt; 'C:\Windows\Setup\Scripts\SetComputerName.log';
+		</File>
+		<File path="C:\Windows\Setup\Scripts\PauseWindowsUpdate.xml">
+&lt;Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task"&gt;
+	&lt;Triggers&gt;
+		&lt;BootTrigger&gt;
+			&lt;Repetition&gt;
+				&lt;Interval&gt;P1D&lt;/Interval&gt;
+				&lt;StopAtDurationEnd&gt;false&lt;/StopAtDurationEnd&gt;
+			&lt;/Repetition&gt;
+			&lt;Enabled&gt;true&lt;/Enabled&gt;
+		&lt;/BootTrigger&gt;
+	&lt;/Triggers&gt;
+	&lt;Principals&gt;
+		&lt;Principal id="Author"&gt;
+			&lt;UserId&gt;S-1-5-19&lt;/UserId&gt;
+			&lt;RunLevel&gt;LeastPrivilege&lt;/RunLevel&gt;
+		&lt;/Principal&gt;
+	&lt;/Principals&gt;
+	&lt;Settings&gt;
+		&lt;MultipleInstancesPolicy&gt;IgnoreNew&lt;/MultipleInstancesPolicy&gt;
+		&lt;DisallowStartIfOnBatteries&gt;false&lt;/DisallowStartIfOnBatteries&gt;
+		&lt;StopIfGoingOnBatteries&gt;false&lt;/StopIfGoingOnBatteries&gt;
+		&lt;AllowHardTerminate&gt;true&lt;/AllowHardTerminate&gt;
+		&lt;StartWhenAvailable&gt;false&lt;/StartWhenAvailable&gt;
+		&lt;RunOnlyIfNetworkAvailable&gt;false&lt;/RunOnlyIfNetworkAvailable&gt;
+		&lt;IdleSettings&gt;
+			&lt;StopOnIdleEnd&gt;true&lt;/StopOnIdleEnd&gt;
+			&lt;RestartOnIdle&gt;false&lt;/RestartOnIdle&gt;
+		&lt;/IdleSettings&gt;
+		&lt;AllowStartOnDemand&gt;true&lt;/AllowStartOnDemand&gt;
+		&lt;Enabled&gt;true&lt;/Enabled&gt;
+		&lt;Hidden&gt;false&lt;/Hidden&gt;
+		&lt;RunOnlyIfIdle&gt;false&lt;/RunOnlyIfIdle&gt;
+		&lt;WakeToRun&gt;false&lt;/WakeToRun&gt;
+		&lt;ExecutionTimeLimit&gt;PT72H&lt;/ExecutionTimeLimit&gt;
+		&lt;Priority&gt;7&lt;/Priority&gt;
+	&lt;/Settings&gt;
+	&lt;Actions Context="Author"&gt;
+		&lt;Exec&gt;
+			&lt;Command&gt;C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe&lt;/Command&gt;
+			&lt;Arguments&gt;-WindowStyle Hidden -NoProfile -NonInteractive -Command "$format = 'yyyy-MM-ddTHH\:mm\:ssK'; $now = [datetime]::UtcNow; $start = $now.ToString($format); $end = $now.AddDays(7).ToString($format); $params = @{ LiteralPath = 'Registry::HKLM\Software\Microsoft\WindowsUpdate\UX\Settings'; Type = 'String'; Force = $true; Verbose = $true; }; 'PauseFeatureUpdatesStartTime', 'PauseQualityUpdatesStartTime', 'PauseUpdatesStartTime' | foreach { Set-ItemProperty @params -Name $_ -Value $start; }; 'PauseFeatureUpdatesEndTime', 'PauseQualityUpdatesEndTime', 'PauseUpdatesExpiryTime' | foreach { Set-ItemProperty @params -Name $_ -Value $end; };"&lt;/Arguments&gt;
+		&lt;/Exec&gt;
+	&lt;/Actions&gt;
+&lt;/Task&gt;
+		</File>
+		<File path="C:\Windows\Setup\Scripts\unattend-01.ps1">
+# Runs as SYSTEM during the specialize pass, before any user account exists.
+# Defender services are already disabled offline by pe.cmd; this script handles the rest.
+
+# --- Firewall: off for every profile (policy + live state) ---
+foreach ($firewallProfile in 'DomainProfile', 'StandardProfile', 'PublicProfile') {
+    reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\WindowsFirewall\$firewallProfile" /v EnableFirewall /t REG_DWORD /d 0 /f
+}
+netsh.exe advfirewall set allprofiles state off
+
+# --- Windows Update: no automatic updates, never pull drivers from Windows Update ---
+reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" /v NoAutoUpdate /t REG_DWORD /d 1 /f
+reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" /v AUOptions /t REG_DWORD /d 1 /f
+reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate" /v ExcludeWUDriversInQualityUpdate /t REG_DWORD /d 1 /f
+reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Windows\DriverSearching" /v DontSearchWindowsUpdate /t REG_DWORD /d 1 /f
+reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\DriverSearching" /v SearchOrderConfig /t REG_DWORD /d 0 /f
+foreach ($service in 'wuauserv', 'UsoSvc') {
+    reg.exe add "HKLM\SYSTEM\CurrentControlSet\Services\$service" /v Start /t REG_DWORD /d 4 /f
+}
+
+# --- Defender: policy as a second layer on top of the disabled services ---
+reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender" /v DisableAntiSpyware /t REG_DWORD /d 1 /f
+reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection" /v DisableRealtimeMonitoring /t REG_DWORD /d 1 /f
+
+# --- Power: best available performance plan, never sleep, never turn the display off ---
+$ultimate = 'e9a42b02-d5df-448d-aa00-03f14749eb61'
+$highPerformance = '8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c'
+$autoInstallerPlan = '2d4f9c1e-6a7b-4e3c-9f10-5a1b2c3d4e5f'
+powercfg.exe /duplicatescheme $ultimate $autoInstallerPlan
+if ($LASTEXITCODE -eq 0) {
+    powercfg.exe /changename $autoInstallerPlan 'AutoInstaller Performance'
+    powercfg.exe /setactive $autoInstallerPlan
+} else {
+    powercfg.exe /setactive $highPerformance
+}
+foreach ($setting in 'monitor-timeout', 'standby-timeout', 'hibernate-timeout', 'disk-timeout') {
+    powercfg.exe /change "$setting-ac" 0
+    powercfg.exe /change "$setting-dc" 0
+}
+powercfg.exe /hibernate off
+# USB selective suspend off (keeps the USB Wi-Fi adapter awake)
+powercfg.exe /setacvalueindex SCHEME_CURRENT 2a737441-1930-4402-8d77-b2bebba308a3 48e6b7a6-50f5-4782-a5d4-53bb8f07e226 0
+powercfg.exe /setdcvalueindex SCHEME_CURRENT 2a737441-1930-4402-8d77-b2bebba308a3 48e6b7a6-50f5-4782-a5d4-53bb8f07e226 0
+# PCI Express link state power management off
+powercfg.exe /setacvalueindex SCHEME_CURRENT 501a4d13-42af-4429-9fd1-a8218c268e20 ee12f906-d277-404b-b6da-e5fa1a576df5 0
+# Wireless adapter: maximum performance
+powercfg.exe /setacvalueindex SCHEME_CURRENT 19cbb8fa-5279-450e-9fac-8a3d5fedd0c1 12bbebe6-58d6-4636-95bb-3217ef867c1a 0
+powercfg.exe /setactive SCHEME_CURRENT
+		</File>
+		<File path="C:\Windows\Setup\Scripts\unattend-02.ps1">
+# Runs elevated as the new local account at its first logon.
+
+# --- Keep logging on automatically forever (blank password) ---
+$winlogon = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon'
+Set-ItemProperty -LiteralPath $winlogon -Name 'AutoAdminLogon' -Type String -Value '1'
+Set-ItemProperty -LiteralPath $winlogon -Name 'DefaultUserName' -Type String -Value $env:USERNAME
+Set-ItemProperty -LiteralPath $winlogon -Name 'DefaultDomainName' -Type String -Value $env:COMPUTERNAME
+Set-ItemProperty -LiteralPath $winlogon -Name 'DefaultPassword' -Type String -Value ''
+Remove-ItemProperty -LiteralPath $winlogon -Name 'AutoLogonCount' -ErrorAction 'SilentlyContinue'
+
+# --- Firewall once more, now that the service is fully up ---
+netsh.exe advfirewall set allprofiles state off
+
+# --- The internal disk must boot before the USB drive from now on ---
+bcdedit.exe /set '{fwbootmgr}' displayorder '{bootmgr}' /addfirst
+
+# --- Hand over to the USB payload: drivers, Wi-Fi, apps, inventory, final reboot ---
+$payload = Get-PSDrive -PSProvider 'FileSystem' |
+    ForEach-Object { Join-Path $_.Root 'AutoInstaller\postinstall.ps1' } |
+    Where-Object { Test-Path -LiteralPath $_ } |
+    Select-Object -First 1
+if ($payload) {
+    Start-Process -FilePath 'powershell.exe' -Wait `
+        -ArgumentList @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', "`"$payload`"")
+} else {
+    $note = 'ZeroTouch: khong tim thay USB (\AutoInstaller\postinstall.ps1) - chua cai driver, Wi-Fi, phan mem.'
+    Set-Content -LiteralPath 'C:\Users\Public\Desktop\LOI.txt' -Value $note -Encoding 'UTF8'
+}
+		</File>
+		<File path="C:\Windows\Setup\Scripts\Specialize.ps1">
+$scripts = @(
+	{
+		[string] $newName = &amp; 'C:\Windows\Setup\Scripts\GetComputerName.ps1';
+		$newName &gt; 'C:\Windows\Setup\Scripts\ComputerName.txt';
+		"Will set the computer name to '${newName}'.";
+		Start-Process -FilePath ( Get-Process -Id $PID ).Path -ArgumentList '-ExecutionPolicy "Unrestricted" -NoProfile -File "C:\Windows\Setup\Scripts\SetComputerName.ps1"' -WindowStyle 'Hidden';
+		Start-Sleep -Seconds 10;
+	};
+	{
+		reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\OOBE" /v BypassNRO /t REG_DWORD /d 1 /f;
+	};
+	{
+		net.exe accounts /lockoutthreshold:0;
+	};
+	{
+		net.exe accounts /maxpwage:UNLIMITED;
+	};
+	{
+		Register-ScheduledTask -TaskName 'PauseWindowsUpdate' -Xml $( Get-Content -LiteralPath 'C:\Windows\Setup\Scripts\PauseWindowsUpdate.xml' -Raw );
+	};
+	{
+		reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" /v SmartScreenEnabled /t REG_SZ /d "Off" /f;
+		reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WTDS\Components" /v ServiceEnabled /t REG_DWORD /d 0 /f;
+		reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WTDS\Components" /v NotifyMalicious /t REG_DWORD /d 0 /f;
+		reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WTDS\Components" /v NotifyPasswordReuse /t REG_DWORD /d 0 /f;
+		reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WTDS\Components" /v NotifyUnsafeApp /t REG_DWORD /d 0 /f;
+		reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender Security Center\Systray" /v HideSystray /t REG_DWORD /d 1 /f;
+	};
+	{
+		reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Power" /v HiberbootEnabled /t REG_DWORD /d 0 /f;
+	};
+	{
+		reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\BitLocker" /v "PreventDeviceEncryption" /t REG_DWORD /d 1 /f;
+	};
+	{
+		  reg.exe add "HKLM\Software\Microsoft\Windows\CurrentVersion\Policies\System" /v "DisableAutomaticRestartSignOn" /t REG_DWORD /d 1 /f;
+	};
+	{
+		&amp; 'C:\Windows\Setup\Scripts\unattend-01.ps1';
+	};
+);
+
+&amp; {
+  [float] $complete = 0;
+  [float] $increment = 100 / $scripts.Count;
+  foreach( $script in $scripts ) {
+    Write-Progress -Id 0 -Activity 'Running scripts to customize your Windows installation. Do not close this window.' -PercentComplete $complete;
+    '*** Will now execute command &#xAB;{0}&#xBB;.' -f $(
+      $script.ToString().Trim() -replace '\s+', ' ' -replace '^(.{99})(.+)$', '$1&#x2026;';
+    );
+    $start = [datetime]::Now;
+    &amp; $script;
+    '*** Finished executing command after {0:0} ms.' -f [datetime]::Now.Subtract( $start ).TotalMilliseconds;
+    "`r`n" * 3;
+    $complete += $increment;
+  }
+} *&gt;&amp;1 | Out-String -Width 1KB -Stream &gt;&gt; "C:\Windows\Setup\Scripts\Specialize.log";
+		</File>
+		<File path="C:\Windows\Setup\Scripts\UserOnce.ps1">
+$scripts = @(
+	{
+		Set-WinHomeLocation -GeoId 251;
+	};
+);
+
+&amp; {
+  [float] $complete = 0;
+  [float] $increment = 100 / $scripts.Count;
+  foreach( $script in $scripts ) {
+    Write-Progress -Id 0 -Activity 'Running scripts to configure this user account. Do not close this window.' -PercentComplete $complete;
+    '*** Will now execute command &#xAB;{0}&#xBB;.' -f $(
+      $script.ToString().Trim() -replace '\s+', ' ' -replace '^(.{99})(.+)$', '$1&#x2026;';
+    );
+    $start = [datetime]::Now;
+    &amp; $script;
+    '*** Finished executing command after {0:0} ms.' -f [datetime]::Now.Subtract( $start ).TotalMilliseconds;
+    "`r`n" * 3;
+    $complete += $increment;
+  }
+} *&gt;&amp;1 | Out-String -Width 1KB -Stream &gt;&gt; "$env:TEMP\UserOnce.log";
+		</File>
+		<File path="C:\Windows\Setup\Scripts\DefaultUser.ps1">
+$scripts = @(
+	{
+		reg.exe add "HKU\DefaultUser\Software\Microsoft\Edge\SmartScreenEnabled" /ve /t REG_DWORD /d 0 /f;
+		reg.exe add "HKU\DefaultUser\Software\Microsoft\Edge\SmartScreenPuaEnabled" /ve /t REG_DWORD /d 0 /f;
+		reg.exe add "HKU\DefaultUser\Software\Microsoft\Windows\CurrentVersion\AppHost" /v EnableWebContentEvaluation /t REG_DWORD /d 0 /f;
+		reg.exe add "HKU\DefaultUser\Software\Microsoft\Windows\CurrentVersion\AppHost" /v PreventOverride /t REG_DWORD /d 0 /f;
+	};
+	{
+		reg.exe add "HKU\DefaultUser\Software\Microsoft\Windows\CurrentVersion\RunOnce" /v "UnattendedSetup" /t REG_SZ /d "powershell.exe -WindowStyle \""Normal\"" -ExecutionPolicy \""Unrestricted\"" -NoProfile -File \""C:\Windows\Setup\Scripts\UserOnce.ps1\""" /f;
+	};
+);
+
+&amp; {
+  [float] $complete = 0;
+  [float] $increment = 100 / $scripts.Count;
+  foreach( $script in $scripts ) {
+    Write-Progress -Id 0 -Activity 'Running scripts to modify the default user&#x2019;&#x2019;s registry hive. Do not close this window.' -PercentComplete $complete;
+    '*** Will now execute command &#xAB;{0}&#xBB;.' -f $(
+      $script.ToString().Trim() -replace '\s+', ' ' -replace '^(.{99})(.+)$', '$1&#x2026;';
+    );
+    $start = [datetime]::Now;
+    &amp; $script;
+    '*** Finished executing command after {0:0} ms.' -f [datetime]::Now.Subtract( $start ).TotalMilliseconds;
+    "`r`n" * 3;
+    $complete += $increment;
+  }
+} *&gt;&amp;1 | Out-String -Width 1KB -Stream &gt;&gt; "C:\Windows\Setup\Scripts\DefaultUser.log";
+		</File>
+		<File path="C:\Windows\Setup\Scripts\FirstLogon.ps1">
+$scripts = @(
+	{
+		Set-ItemProperty -LiteralPath 'Registry::HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -Name 'AutoLogonCount' -Type 'DWord' -Force -Value 0;
+	};
+	{
+		&amp; 'C:\Windows\Setup\Scripts\unattend-02.ps1';
+	};
+	{
+		Remove-Item -LiteralPath @(
+		  'C:\Windows\Panther\unattend.xml';
+		  'C:\Windows\Panther\unattend-original.xml';
+		  'C:\Windows\Setup\Scripts\Wifi.xml';
+		) -Force -ErrorAction 'SilentlyContinue' -Verbose;
+	};
+);
+
+&amp; {
+  [float] $complete = 0;
+  [float] $increment = 100 / $scripts.Count;
+  foreach( $script in $scripts ) {
+    Write-Progress -Id 0 -Activity 'Running scripts to finalize your Windows installation. Do not close this window.' -PercentComplete $complete;
+    '*** Will now execute command &#xAB;{0}&#xBB;.' -f $(
+      $script.ToString().Trim() -replace '\s+', ' ' -replace '^(.{99})(.+)$', '$1&#x2026;';
+    );
+    $start = [datetime]::Now;
+    &amp; $script;
+    '*** Finished executing command after {0:0} ms.' -f [datetime]::Now.Subtract( $start ).TotalMilliseconds;
+    "`r`n" * 3;
+    $complete += $increment;
+  }
+} *&gt;&amp;1 | Out-String -Width 1KB -Stream &gt;&gt; "C:\Windows\Setup\Scripts\FirstLogon.log";
+		</File>
+	</Extensions>
+</unattend>

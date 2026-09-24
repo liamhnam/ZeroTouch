@@ -1,0 +1,14 @@
+# Secrets (Wi-Fi password)
+secrets.env
+
+# Large binaries: Windows images, installers, driver packs
+*.iso
+*.exe
+*.msi
+drivers/sdio/*
+!drivers/sdio/README.md
+drivers/winpe/*
+!drivers/winpe/README.md
+
+.DS_Store
+__pycache__/
