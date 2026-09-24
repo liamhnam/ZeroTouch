@@ -56,9 +56,19 @@ function Invoke-Installer([string] $Dir, [string] $Pattern, [string[]] $Argument
     $setup = Get-ChildItem -LiteralPath $Dir -Filter $Pattern -File -ErrorAction 'SilentlyContinue' |
         Sort-Object -Property 'Name' -Descending | Select-Object -First 1
     if (-not $setup) { throw "Chua co bo cai ($Pattern) trong $Dir - xem README.md trong thu muc do." }
-    $startArgs = @{ FilePath = $setup.FullName; WorkingDirectory = $Dir; Wait = $true; PassThru = $true }
+    $startArgs = @{ FilePath = $setup.FullName; WorkingDirectory = $Dir; PassThru = $true }
     if ($Arguments) { $startArgs.ArgumentList = $Arguments }
+    # Not Start-Process -Wait: it also waits for every process the installer leaves running
+    # (e.g. Avision's SAC.exe agent) and would never return. Wait for the installer itself, then
+    # for setup-like processes it spawned (wizards that hand over to a second setup/ISBEW), max 30 min.
+    $started = Get-Date
     $process = Start-Process @startArgs
+    $null = $process.Handle   # keeps ExitCode readable after exit (PowerShell 5.1)
+    $process.WaitForExit()
+    $deadline = (Get-Date).AddMinutes(30)
+    while ((Get-Date) -lt $deadline -and (Get-Process -ErrorAction 'SilentlyContinue' | Where-Object {
+        $_.StartTime -gt $started -and $_.ProcessName -match '(?i)setup|install|isbew|^_is|^is-'
+    })) { Start-Sleep -Seconds 3 }
     if ($process.ExitCode -notin 0, 3010) { throw "$($setup.Name) exit code $($process.ExitCode)" }
     "$($setup.Name) xong (exit $($process.ExitCode))"
 }
