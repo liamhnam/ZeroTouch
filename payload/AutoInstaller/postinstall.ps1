@@ -104,5 +104,6 @@ $null = New-Item -ItemType Directory -Force -Path $usbLogDir -ErrorAction 'Silen
 Copy-Item -Path "$LocalLogDir\*", 'C:\Windows\Setup\Scripts\*.log', 'C:\Windows\Panther\setupact.log', 'C:\Windows\Panther\setuperr.log' `
     -Destination $usbLogDir -ErrorAction 'SilentlyContinue'
 
-# --- Final reboot so every driver is fully loaded; auto-logon lands on the desktop ---
-shutdown.exe /r /t 30 /c 'ZeroTouch: khoi dong lai lan cuoi'
+# --- Final reboot so every driver is fully loaded; auto-logon lands on the desktop ready for use ---
+shutdown.exe /r /t 5 /c 'ZeroTouch: Khoi dong lai lan cuoi - San sang su dung'
+

@@ -114,11 +114,11 @@
 				</RunSynchronousCommand>
 				<RunSynchronousCommand wcm:action="add">
 					<Order>28</Order>
-					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:diskpart.exe /s X:\diskpart.txt ^|^| call :fail ^"diskpart.exe encountered an error.^"&amp;echo:set ^"IMG_PARAM=/Index:1^"&amp;echo:call :print ^"Applying Windows image to target disk^")</Path>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:diskpart.exe /s X:\diskpart.txt ^|^| call :fail ^"diskpart.exe encountered an error.^"&amp;echo:set ^"IMG_PARAM=/Index:1^"&amp;echo:call :print ^"Applying Windows image to target disk^"&amp;echo:mkdir W:\Temp 2^&gt;nul)</Path>
 				</RunSynchronousCommand>
 				<RunSynchronousCommand wcm:action="add">
 					<Order>29</Order>
-					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:dism.exe /Apply-Image /ImageFile:^%IMAGE_FILE^% ^%SWM_PARAM^% ^%IMG_PARAM^% /ApplyDir:W:\ /CheckIntegrity /Verify ^|^| call :fail ^"dism.exe encountered an error.^"&amp;echo:call :print ^"Making system partition bootable^")</Path>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:dism.exe /Apply-Image /ImageFile:^%IMAGE_FILE^% ^%SWM_PARAM^% ^%IMG_PARAM^% /ApplyDir:W:\ /ScratchDir:W:\Temp ^|^| call :fail ^"dism.exe encountered an error.^"&amp;echo:call :print ^"Making system partition bootable^")</Path>
 				</RunSynchronousCommand>
 				<RunSynchronousCommand wcm:action="add">
 					<Order>30</Order>
@@ -134,34 +134,42 @@
 				</RunSynchronousCommand>
 				<RunSynchronousCommand wcm:action="add">
 					<Order>33</Order>
-					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:call :print ^"Adding drivers from $WinPEDriver$ folder to new installation^"&amp;echo:dism.exe /Add-Driver /Image:W:\ /Driver:^"^%PEDRIVERS_FOLDER^%^" /Recurse&amp;echo:^)&amp;echo:call :print ^"Setting time zone^")</Path>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:call :print ^"Adding drivers from $WinPEDriver$ folder to new installation^"&amp;echo:dism.exe /Add-Driver /Image:W:\ /Driver:^"^%PEDRIVERS_FOLDER^%^" /Recurse&amp;echo:^)&amp;echo:call :print ^"Disabling Windows Defender^")</Path>
 				</RunSynchronousCommand>
 				<RunSynchronousCommand wcm:action="add">
 					<Order>34</Order>
-					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:dism.exe /Image:W:\ /Set-TimeZone:^"SE Asia Standard Time^"&amp;echo:call :print ^"Disabling Windows Defender^"&amp;echo:reg.exe LOAD HKLM\mount W:\Windows\System32\config\SYSTEM)</Path>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:reg.exe LOAD HKLM\mount W:\Windows\System32\config\SYSTEM&amp;echo:for ^%^%s in (Sense WdBoot WdFilter WdNisDrv WdNisSvc WinDefend^) do reg.exe ADD HKLM\mount\ControlSet001\Services\^%^%s /v Start /t REG_DWORD /d 4 /f)</Path>
 				</RunSynchronousCommand>
 				<RunSynchronousCommand wcm:action="add">
 					<Order>35</Order>
-					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:for ^%^%s in (Sense WdBoot WdFilter WdNisDrv WdNisSvc WinDefend^) do reg.exe ADD HKLM\mount\ControlSet001\Services\^%^%s /v Start /t REG_DWORD /d 4 /f&amp;echo:reg.exe UNLOAD HKLM\mount)</Path>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:reg.exe UNLOAD HKLM\mount&amp;echo:call :print ^"Setting device setup region and speeding up OOBE^"&amp;echo:reg.exe LOAD HKLM\mount W:\Windows\System32\config\SOFTWARE)</Path>
 				</RunSynchronousCommand>
 				<RunSynchronousCommand wcm:action="add">
 					<Order>36</Order>
-					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:call :print ^"Setting device setup region to Vietnam (GeoID 251^)^"&amp;echo:reg.exe LOAD HKLM\mount W:\Windows\System32\config\SOFTWARE)</Path>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:reg.exe ADD ^"HKLM\mount\Microsoft\Windows\CurrentVersion\Control Panel\DeviceRegion^" /v DeviceRegion /t REG_DWORD /d 251 /f)</Path>
 				</RunSynchronousCommand>
 				<RunSynchronousCommand wcm:action="add">
 					<Order>37</Order>
-					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:reg.exe ADD ^"HKLM\mount\Microsoft\Windows\CurrentVersion\Control Panel\DeviceRegion^" /v DeviceRegion /t REG_DWORD /d 251 /f&amp;echo:reg.exe UNLOAD HKLM\mount&amp;echo:call :print ^"Computer will now reboot^")</Path>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:reg.exe ADD ^"HKLM\mount\Microsoft\Windows\CurrentVersion\Policies\System^" /v EnableFirstLogonAnimation /t REG_DWORD /d 0 /f)</Path>
 				</RunSynchronousCommand>
 				<RunSynchronousCommand wcm:action="add">
 					<Order>38</Order>
-					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:wpeutil.exe reboot&amp;echo:goto :eof&amp;echo::hold&amp;echo:ping.exe -n 30 127.0.0.1 ^&gt;nul&amp;echo:goto :hold&amp;echo::fail&amp;echo:echo:&amp;echo:echo:Fatal error: ^%~1&amp;echo:echo:&amp;echo:pause&amp;echo:exit 1&amp;echo::print&amp;echo:echo:)</Path>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:reg.exe ADD ^"HKLM\mount\Microsoft\Windows NT\CurrentVersion\Winlogon^" /v EnableFirstLogonAnimation /t REG_DWORD /d 0 /f&amp;echo:reg.exe ADD ^"HKLM\mount\Microsoft\Windows\CurrentVersion\OOBE^" /v BypassNRO /t REG_DWORD /d 1 /f)</Path>
 				</RunSynchronousCommand>
 				<RunSynchronousCommand wcm:action="add">
 					<Order>39</Order>
-					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:echo:*** ^%~1 ***&amp;echo:echo:&amp;echo:goto :eof)</Path>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:reg.exe ADD ^"HKLM\mount\Microsoft\Windows\CurrentVersion\OOBE^" /v DisableVoice /t REG_DWORD /d 1 /f&amp;echo:reg.exe ADD ^"HKLM\mount\Microsoft\Windows\CurrentVersion\OOBE^" /v PrivacyConsentStatus /t REG_DWORD /d 1 /f)</Path>
 				</RunSynchronousCommand>
 				<RunSynchronousCommand wcm:action="add">
 					<Order>40</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:reg.exe UNLOAD HKLM\mount&amp;echo:call :print ^"Computer will now reboot^"&amp;echo:wpeutil.exe reboot&amp;echo:goto :eof&amp;echo::hold&amp;echo:ping.exe -n 30 127.0.0.1 ^&gt;nul&amp;echo:goto :hold&amp;echo::fail&amp;echo:echo:&amp;echo:echo:Fatal error: ^%~1)</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>41</Order>
+					<Path>cmd.exe /c &gt;&gt;X:\pe.cmd (echo:echo:&amp;echo:pause&amp;echo:exit 1&amp;echo::print&amp;echo:echo:&amp;echo:echo:*** ^%~1 ***&amp;echo:echo:&amp;echo:goto :eof)</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>42</Order>
 					<Path>cmd.exe /c "X:\pe.cmd"</Path>
 				</RunSynchronousCommand>
 			</RunSynchronous>
@@ -235,7 +243,9 @@
 				<ProtectYourPC>3</ProtectYourPC>
 				<HideEULAPage>true</HideEULAPage>
 				<HideWirelessSetupInOOBE>true</HideWirelessSetupInOOBE>
-				<HideOnlineAccountScreens>false</HideOnlineAccountScreens>
+				<HideOnlineAccountScreens>true</HideOnlineAccountScreens>
+				<HideLocalAccountScreen>true</HideLocalAccountScreen>
+				<HideOEMRegistrationScreen>true</HideOEMRegistrationScreen>
 			</OOBE>
 			<FirstLogonCommands>
 				<SynchronousCommand wcm:action="add">
@@ -368,7 +378,9 @@ diskpart.exe /s X:\diskpart.txt || call :fail "diskpart.exe encountered an error
 
 set "IMG_PARAM=/Index:1"
 call :print "Applying Windows image to target disk"
-dism.exe /Apply-Image /ImageFile:%IMAGE_FILE% %SWM_PARAM% %IMG_PARAM% /ApplyDir:W:\ /CheckIntegrity /Verify || call :fail "dism.exe encountered an error."
+mkdir W:\Temp 2&gt;nul
+dism.exe /Apply-Image /ImageFile:%IMAGE_FILE% %SWM_PARAM% %IMG_PARAM% /ApplyDir:W:\ /ScratchDir:W:\Temp || call :fail "dism.exe encountered an error."
+
 
 call :print "Making system partition bootable"
 bcdboot.exe W:\Windows /s S: || call :fail "bcdboot.exe encountered an error."
@@ -389,17 +401,19 @@ if defined PEDRIVERS_FOLDER (
     dism.exe /Add-Driver /Image:W:\ /Driver:"%PEDRIVERS_FOLDER%" /Recurse
 )
 
-call :print "Setting time zone"
-dism.exe /Image:W:\ /Set-TimeZone:"SE Asia Standard Time"
-
 call :print "Disabling Windows Defender"
 reg.exe LOAD HKLM\mount W:\Windows\System32\config\SYSTEM
 for %%s in (Sense WdBoot WdFilter WdNisDrv WdNisSvc WinDefend) do reg.exe ADD HKLM\mount\ControlSet001\Services\%%s /v Start /t REG_DWORD /d 4 /f
 reg.exe UNLOAD HKLM\mount
 
-call :print "Setting device setup region to Vietnam (GeoID 251)"
+call :print "Setting device setup region and speeding up OOBE"
 reg.exe LOAD HKLM\mount W:\Windows\System32\config\SOFTWARE
 reg.exe ADD "HKLM\mount\Microsoft\Windows\CurrentVersion\Control Panel\DeviceRegion" /v DeviceRegion /t REG_DWORD /d 251 /f
+reg.exe ADD "HKLM\mount\Microsoft\Windows\CurrentVersion\Policies\System" /v EnableFirstLogonAnimation /t REG_DWORD /d 0 /f
+reg.exe ADD "HKLM\mount\Microsoft\Windows NT\CurrentVersion\Winlogon" /v EnableFirstLogonAnimation /t REG_DWORD /d 0 /f
+reg.exe ADD "HKLM\mount\Microsoft\Windows\CurrentVersion\OOBE" /v BypassNRO /t REG_DWORD /d 1 /f
+reg.exe ADD "HKLM\mount\Microsoft\Windows\CurrentVersion\OOBE" /v DisableVoice /t REG_DWORD /d 1 /f
+reg.exe ADD "HKLM\mount\Microsoft\Windows\CurrentVersion\OOBE" /v PrivacyConsentStatus /t REG_DWORD /d 1 /f
 reg.exe UNLOAD HKLM\mount
 
 call :print "Computer will now reboot"
@@ -569,6 +583,11 @@ foreach ($service in 'wuauserv', 'UsoSvc', 'WaaSMedicSvc') {
 reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender" /v DisableAntiSpyware /t REG_DWORD /d 1 /f
 reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection" /v DisableRealtimeMonitoring /t REG_DWORD /d 1 /f
 
+# --- OOBE &amp; Logon acceleration: skip "Hi/Getting ready" animation and network checks ---
+reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v EnableFirstLogonAnimation /t REG_DWORD /d 0 /f
+reg.exe add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" /v EnableFirstLogonAnimation /t REG_DWORD /d 0 /f
+reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\OOBE" /v BypassNRO /t REG_DWORD /d 1 /f
+
 # --- Power: best available performance plan, never sleep, never turn the display off ---
 $ultimate = 'e9a42b02-d5df-448d-aa00-03f14749eb61'
 $highPerformance = '8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c'
@@ -615,11 +634,19 @@ reg.exe add 'HKLM\SYSTEM\CurrentControlSet\Services\wuauserv' /v Start /t REG_DW
 bcdedit.exe /set '{fwbootmgr}' displayorder '{bootmgr}' /addfirst
 
 # --- Hand over to the USB payload: drivers, Wi-Fi, apps, inventory, final reboot ---
-$payload = Get-PSDrive -PSProvider 'FileSystem' |
-    ForEach-Object { Join-Path $_.Root 'AutoInstaller\postinstall.ps1' } |
-    Where-Object { Test-Path -LiteralPath $_ } |
+$usb = Get-Volume -ErrorAction 'SilentlyContinue' |
+    Where-Object { $_.FileSystemLabel -eq 'ZEROTOUCH' -and $_.DriveLetter } |
     Select-Object -First 1
+if ($usb -and (Test-Path -LiteralPath "$($usb.DriveLetter):\AutoInstaller\postinstall.ps1")) {
+    $payload = "$($usb.DriveLetter):\AutoInstaller\postinstall.ps1"
+} else {
+    $payload = Get-PSDrive -PSProvider 'FileSystem' |
+        ForEach-Object { Join-Path $_.Root 'AutoInstaller\postinstall.ps1' } |
+        Where-Object { Test-Path -LiteralPath $_ } |
+        Select-Object -First 1
+}
 if ($payload) {
+
     Start-Process -FilePath 'powershell.exe' -Wait `
         -ArgumentList @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', "`"$payload`"")
 } else {

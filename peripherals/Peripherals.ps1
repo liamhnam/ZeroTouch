@@ -13,7 +13,8 @@
 #>
 param(
     [string[]] $Install = @(),
-    [string] $PortName = ''
+    [string] $PortName = '',
+    [switch] $AutoDetect
 )
 
 $ErrorActionPreference = 'Stop'
@@ -22,11 +23,18 @@ $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 # --- Elevate (the tool installs drivers) ---
 $principal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
 if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    $arguments = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden', '-File', "`"$($MyInvocation.MyCommand.Path)`"")
-    if ($Install) { $arguments += @('-Install', ($Install -join ',')) }
-    Start-Process -FilePath 'powershell.exe' -Verb 'RunAs' -ArgumentList $arguments
-    return
+    try {
+        $arguments = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden', '-File', "`"$($MyInvocation.MyCommand.Path)`"")
+        if ($Install) { $arguments += @('-Install', ($Install -join ',')) }
+        if ($PortName) { $arguments += @('-PortName', $PortName) }
+        if ($AutoDetect) { $arguments += @('-AutoDetect') }
+        Start-Process -FilePath 'powershell.exe' -Verb 'RunAs' -ArgumentList $arguments
+        return
+    } catch {
+        Write-Warning "Khong the tu dong nang quyen Administrator ($($_.Exception.Message)). Tiep tuc chay..."
+    }
 }
+
 
 . (Join-Path $Root 'lib.ps1')
 $devices = Get-Content -LiteralPath (Join-Path $Root 'devices.json') -Raw | ConvertFrom-Json
@@ -54,6 +62,42 @@ function Install-Devices([string[]] $Ids, [scriptblock] $Write) {
     return $failed
 }
 
+function Get-DetectedDevices {
+    $pnp = @(Get-PnpDevice -PresentOnly -ErrorAction 'SilentlyContinue')
+    $pnpText = ($pnp | ForEach-Object { "$($_.FriendlyName) $($_.InstanceId) $($_.HardwareID)" }) -join "`n"
+    $usbPrinterPort = @(Get-ConnectedUsbPrinterPort) | Select-Object -First 1
+
+    $detected = @()
+    foreach ($entry in $devices) {
+        $matched = $false
+        if ($entry.patterns) {
+            foreach ($pat in $entry.patterns) {
+                if ($pnpText -match [regex]::Escape($pat)) {
+                    $matched = $true
+                    break
+                }
+            }
+        }
+        if ($matched) {
+            $detected += $entry.id
+        }
+    }
+
+    # Neu co cong may in USB dang cam ma chua match duoc may in cu the nao,
+    # mac dinh dung Xprinter Q260 (XP-80C) - dong may in pho bien nhat cua GoodM kiosk
+    if ($usbPrinterPort) {
+        $hasPrinter = $detected | Where-Object {
+            $id = $_
+            ($devices | Where-Object { $_.id -eq $id -and $_.group -eq 'printer' })
+        }
+        if (-not $hasPrinter) {
+            $detected += 'xprinter-q260'
+        }
+    }
+
+    return @($detected | Select-Object -Unique)
+}
+
 # --- Command-line mode ---
 if ($Install) {
     $ids = $Install | ForEach-Object { $_ -split ',' } | Where-Object { $_ }
@@ -63,7 +107,28 @@ if ($Install) {
     exit $(if ($failed) { 1 } else { 0 })
 }
 
-# --- Window ---
+# --- Auto-detect mode ---
+if ($AutoDetect) {
+    $ids = Get-DetectedDevices
+    $write = { param($text) Write-Host $text; Add-Content -LiteralPath $logFile -Value $text }
+    if ($ids) {
+        & $write "Phat hien thiet bi ngoai vi dang cam: $($ids -join ', ')"
+        $failed = Install-Devices $ids $write
+        & $write "Log: $logFile"
+        exit $(if ($failed) { 1 } else { 0 })
+    } else {
+        & $write "Khong phat hien thiet bi ngoai vi nao dang cam."
+        exit 0
+    }
+}
+
+# --- Window (pre-select detected devices) ---
+$detectedIds = Get-DetectedDevices
+$detectedPrinter = $detectedIds | Where-Object {
+    $id = $_
+    ($devices | Where-Object { $_.id -eq $id -and $_.group -eq 'printer' })
+} | Select-Object -First 1
+
 Add-Type -AssemblyName 'System.Windows.Forms', 'System.Drawing'
 [System.Windows.Forms.Application]::EnableVisualStyles()
 $font = New-Object System.Drawing.Font('Segoe UI', 14)
@@ -97,7 +162,11 @@ foreach ($entry in @([pscustomobject] @{ id = ''; name = 'Khong' }) + @($devices
     $radio = New-Object System.Windows.Forms.RadioButton
     $radio.Text = $entry.name; $radio.Tag = $entry.id; $radio.AutoSize = $true
     $radio.Location = New-Object System.Drawing.Point($x, 8)
-    $radio.Checked = ($entry.id -eq '')
+    if ($detectedPrinter) {
+        $radio.Checked = ($entry.id -eq $detectedPrinter)
+    } else {
+        $radio.Checked = ($entry.id -eq '')
+    }
     $printerPanel.Controls.Add($radio)
     $radios += $radio
     $x += 200
@@ -110,11 +179,15 @@ foreach ($entry in $devices | Where-Object { $_.group -ne 'printer' }) {
     $check = New-Object System.Windows.Forms.CheckBox
     $check.Text = $entry.name; $check.Tag = $entry.id; $check.AutoSize = $true
     $check.Location = New-Object System.Drawing.Point(30, $y)
+    if ($detectedIds -contains $entry.id) {
+        $check.Checked = $true
+    }
     $form.Controls.Add($check)
     $checks += $check
     $y += 42
 }
 $y += 10
+
 
 $installButton = New-Object System.Windows.Forms.Button
 $installButton.Text = 'Cai dat'; $installButton.Font = $bold

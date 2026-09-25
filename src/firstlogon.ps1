@@ -18,11 +18,19 @@ reg.exe add 'HKLM\SYSTEM\CurrentControlSet\Services\wuauserv' /v Start /t REG_DW
 bcdedit.exe /set '{fwbootmgr}' displayorder '{bootmgr}' /addfirst
 
 # --- Hand over to the USB payload: drivers, Wi-Fi, apps, inventory, final reboot ---
-$payload = Get-PSDrive -PSProvider 'FileSystem' |
-    ForEach-Object { Join-Path $_.Root 'AutoInstaller\postinstall.ps1' } |
-    Where-Object { Test-Path -LiteralPath $_ } |
+$usb = Get-Volume -ErrorAction 'SilentlyContinue' |
+    Where-Object { $_.FileSystemLabel -eq 'ZEROTOUCH' -and $_.DriveLetter } |
     Select-Object -First 1
+if ($usb -and (Test-Path -LiteralPath "$($usb.DriveLetter):\AutoInstaller\postinstall.ps1")) {
+    $payload = "$($usb.DriveLetter):\AutoInstaller\postinstall.ps1"
+} else {
+    $payload = Get-PSDrive -PSProvider 'FileSystem' |
+        ForEach-Object { Join-Path $_.Root 'AutoInstaller\postinstall.ps1' } |
+        Where-Object { Test-Path -LiteralPath $_ } |
+        Select-Object -First 1
+}
 if ($payload) {
+
     Start-Process -FilePath 'powershell.exe' -Wait `
         -ArgumentList @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', "`"$payload`"")
 } else {

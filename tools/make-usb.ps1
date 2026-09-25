@@ -119,7 +119,7 @@ try {
             if (-not (Test-Path -LiteralPath $wim)) {
                 Write-Host 'Converting install.esd to install.wim (first run only, takes a while)...'
                 Invoke-Native 'dism.exe' @('/Export-Image', "/SourceImageFile:$esd", '/SourceIndex:1',
-                    "/DestinationImageFile:$wim.tmp", '/Compress:max', '/CheckIntegrity')
+                    "/DestinationImageFile:$wim.tmp", '/Compress:max')
                 Move-Item -LiteralPath "$wim.tmp" -Destination $wim
             }
         } else {
@@ -135,10 +135,11 @@ try {
                 Remove-Item -LiteralPath $swmDir -Recurse -Force -ErrorAction 'SilentlyContinue'
                 $null = New-Item -ItemType Directory -Force -Path $swmDir
                 Invoke-Native 'dism.exe' @('/Split-Image', "/ImageFile:$wim", "/SWMFile:$(Join-Path $swmDir 'install.swm')",
-                    "/FileSize:$SwmSizeMB", '/CheckIntegrity')
+                    "/FileSize:$SwmSizeMB")
             }
             $imageFiles = @(Get-ChildItem -LiteralPath $swmDir -Filter 'install*.swm')
         }
+
     }
 
     # --- FAT32 and capacity checks ---
@@ -186,6 +187,10 @@ try {
     foreach ($app in $apps) { Copy-Tree $app.FullName (Join-Path $usb "AutoInstaller\apps\$($app.Name)") }
     Write-Host 'Copying peripherals...'
     Copy-Tree (Join-Path $Root 'peripherals') (Join-Path $usb 'AutoInstaller\peripherals') @('.gitignore')
+    if ($secrets.PERIPHERALS) {
+        Set-Content -LiteralPath (Join-Path $usb 'AutoInstaller\peripherals\config.txt') -Value $secrets.PERIPHERALS.Trim() -Encoding 'UTF8'
+    }
+
     if ($hasSdio) {
         Write-Host 'Copying SDIO...'
         Copy-Tree (Join-Path $Root 'drivers\sdio') (Join-Path $usb 'AutoInstaller\sdio') @('README.md', '.gitignore')

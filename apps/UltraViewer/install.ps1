@@ -22,9 +22,13 @@ if (-not (Get-Process -Name 'UltraViewer_Desktop' -ErrorAction 'SilentlyContinue
     Start-Process -FilePath $exe
 }
 $id = ''
-for ($i = 0; $i -lt 12 -and -not $id; $i++) {
-    Start-Sleep -Seconds 5
-    $id = [string] (Get-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\WOW6432Node\UltraViewer' -ErrorAction 'SilentlyContinue').PreferID
+# Chi doi lay ID khi may da co ket noi Internet, toi da 15 giay (tranh treo 60 giay neu offline)
+if ($Context.Inventory.WifiStatus -eq 'CONNECTED') {
+    for ($i = 0; $i -lt 5 -and -not $id; $i++) {
+        Start-Sleep -Seconds 3
+        $id = [string] (Get-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\WOW6432Node\UltraViewer' -ErrorAction 'SilentlyContinue').PreferID
+    }
 }
 $Context.Inventory.UltraViewerID = $id
 "UltraViewer ID: $(if ($id) { $id } else { 'not found' })"
+

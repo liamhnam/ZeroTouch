@@ -22,6 +22,11 @@ foreach ($service in 'wuauserv', 'UsoSvc', 'WaaSMedicSvc') {
 reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender" /v DisableAntiSpyware /t REG_DWORD /d 1 /f
 reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection" /v DisableRealtimeMonitoring /t REG_DWORD /d 1 /f
 
+# --- OOBE & Logon acceleration: skip "Hi/Getting ready" animation and network checks ---
+reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v EnableFirstLogonAnimation /t REG_DWORD /d 0 /f
+reg.exe add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" /v EnableFirstLogonAnimation /t REG_DWORD /d 0 /f
+reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\OOBE" /v BypassNRO /t REG_DWORD /d 1 /f
+
 # --- Power: best available performance plan, never sleep, never turn the display off ---
 $ultimate = 'e9a42b02-d5df-448d-aa00-03f14749eb61'
 $highPerformance = '8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c'

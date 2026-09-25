@@ -6,12 +6,13 @@ Source: `SDIO_Update.torrent` from [glenn.delahoy.com](https://www.glenn.delahoy
 
 | Pack | Why |
 |---|---|
-| `DP_Chipset` | Intel chipset, ME, SMBus, PMC, thermal |
-| `DP_Video_Intel_DCH31x`, `DP_Video_Intel_DCH32x` | Intel UHD 6xx (9th/10th gen) and Iris Xe / UHD 7xx (11th–14th gen) |
-| `DP_Sounds_Realtek_DCH`, `DP_Sounds_Realtek`, `DP_Sounds_HDMI` | Realtek HD audio (DCH and legacy), HDMI audio |
-| `DP_LAN_Intel`, `DP_LAN_Realtek-NT` | Onboard Ethernet |
-| `DP_MassStorage` | Intel RST / VMD, SATA/NVMe controllers |
-| `DP_xUSB`, `DP_zUSB3`, `DP_USB_SDIO01`, `DP_HID_SDIO01` | USB controllers, HID |
+| `DP_Chipset` | Intel chipset, ME, SMBus, PMC, thermal (An toàn, cần thiết) |
+| `DP_Video_Intel_DCH31x`, `DP_Video_Intel_DCH32x` | Intel UHD 6xx (9th/10th) và Iris Xe / UHD 7xx (11th–14th) |
+| `DP_WLAN-WiFi`, `DP_LAN_Realtek-NT`, `DP_LAN_Intel` | Wi-Fi và mạng LAN onboard |
+| *(Tùy chọn)* `DP_Sounds_Realtek_DCH` | Âm thanh Realtek HD Audio |
+
+> [!WARNING]
+> **KHÔNG NÊN TẢI** `DP_MassStorage` (gây nguy cơ màn hình xanh BSOD 0x7B do đè driver AHCI/NVMe chuẩn của Microsoft) và `DP_xUSB` (dễ làm đơ/ngắt cổng USB và màn hình cảm ứng).
 
 Layout:
 

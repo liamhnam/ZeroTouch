@@ -25,7 +25,7 @@ $ssid = ([xml] (Get-Content -LiteralPath $profiles[0].FullName -Raw)).WLANProfil
 netsh.exe wlan connect name="$ssid" | Out-Host
 
 $connected = $false
-for ($i = 0; $i -lt 30 -and -not $connected; $i++) {
+for ($i = 0; $i -lt 10 -and -not $connected; $i++) {
     Start-Sleep -Seconds 2
     $state = netsh.exe wlan show interfaces | Out-String
     $connected = ($state -match '(?m)^\s*State\s*:\s*connected\s*$') -and
@@ -37,10 +37,11 @@ if (-not $connected) {
 }
 
 $online = $false
-for ($i = 0; $i -lt 15 -and -not $online; $i++) {
+for ($i = 0; $i -lt 4 -and -not $online; $i++) {
     $online = Test-Connection -ComputerName '1.1.1.1' -Count 1 -Quiet
-    if (-not $online) { Start-Sleep -Seconds 2 }
+    if (-not $online) { Start-Sleep -Seconds 1 }
 }
+
 if (-not $online) {
     $Context.Inventory.WifiStatus = 'NO_INTERNET'
     return @{ Status = 'FAIL'; Detail = "connected to $ssid but no Internet" }

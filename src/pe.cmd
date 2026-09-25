@@ -114,7 +114,9 @@ diskpart.exe /s X:\diskpart.txt || call :fail "diskpart.exe encountered an error
 
 set "IMG_PARAM=/Index:1"
 call :print "Applying Windows image to target disk"
-dism.exe /Apply-Image /ImageFile:%IMAGE_FILE% %SWM_PARAM% %IMG_PARAM% /ApplyDir:W:\ /CheckIntegrity /Verify || call :fail "dism.exe encountered an error."
+mkdir W:\Temp 2>nul
+dism.exe /Apply-Image /ImageFile:%IMAGE_FILE% %SWM_PARAM% %IMG_PARAM% /ApplyDir:W:\ /ScratchDir:W:\Temp || call :fail "dism.exe encountered an error."
+
 
 call :print "Making system partition bootable"
 bcdboot.exe W:\Windows /s S: || call :fail "bcdboot.exe encountered an error."
@@ -135,17 +137,19 @@ if defined PEDRIVERS_FOLDER (
     dism.exe /Add-Driver /Image:W:\ /Driver:"%PEDRIVERS_FOLDER%" /Recurse
 )
 
-call :print "Setting time zone"
-dism.exe /Image:W:\ /Set-TimeZone:"SE Asia Standard Time"
-
 call :print "Disabling Windows Defender"
 reg.exe LOAD HKLM\mount W:\Windows\System32\config\SYSTEM
 for %%s in (Sense WdBoot WdFilter WdNisDrv WdNisSvc WinDefend) do reg.exe ADD HKLM\mount\ControlSet001\Services\%%s /v Start /t REG_DWORD /d 4 /f
 reg.exe UNLOAD HKLM\mount
 
-call :print "Setting device setup region to Vietnam (GeoID 251)"
+call :print "Setting device setup region and speeding up OOBE"
 reg.exe LOAD HKLM\mount W:\Windows\System32\config\SOFTWARE
 reg.exe ADD "HKLM\mount\Microsoft\Windows\CurrentVersion\Control Panel\DeviceRegion" /v DeviceRegion /t REG_DWORD /d 251 /f
+reg.exe ADD "HKLM\mount\Microsoft\Windows\CurrentVersion\Policies\System" /v EnableFirstLogonAnimation /t REG_DWORD /d 0 /f
+reg.exe ADD "HKLM\mount\Microsoft\Windows NT\CurrentVersion\Winlogon" /v EnableFirstLogonAnimation /t REG_DWORD /d 0 /f
+reg.exe ADD "HKLM\mount\Microsoft\Windows\CurrentVersion\OOBE" /v BypassNRO /t REG_DWORD /d 1 /f
+reg.exe ADD "HKLM\mount\Microsoft\Windows\CurrentVersion\OOBE" /v DisableVoice /t REG_DWORD /d 1 /f
+reg.exe ADD "HKLM\mount\Microsoft\Windows\CurrentVersion\OOBE" /v PrivacyConsentStatus /t REG_DWORD /d 1 /f
 reg.exe UNLOAD HKLM\mount
 
 call :print "Computer will now reboot"

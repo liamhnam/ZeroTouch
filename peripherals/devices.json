@@ -1,12 +1,12 @@
 [
-    { "id": "epson-tm-t81",         "group": "printer", "name": "Epson TM-T81" },
-    { "id": "xprinter-q260",        "group": "printer", "name": "Xprinter Q260" },
-    { "id": "sprt-80mm",            "group": "printer", "name": "SPRT 80mm" },
-    { "id": "hanel-hn212",          "group": "device",  "name": "Hanel HN212 (doc CCCD)" },
-    { "id": "barcode-icw97201",     "group": "device",  "name": "May quet ma ICW97201" },
-    { "id": "barcode-zebra-ds9308", "group": "device",  "name": "May quet ma Zebra DS9308" },
-    { "id": "ricoh-fi-800r",        "group": "device",  "name": "May scan Ricoh fi-800R" },
-    { "id": "brother-ads-1300",     "group": "device",  "name": "May scan Brother ADS-1300" },
-    { "id": "avision-av332u",       "group": "device",  "name": "May scan Avision AV332U" },
-    { "id": "brother-hl-l2361dn",   "group": "device",  "name": "May in A4 Brother HL-L2361DN" }
+    { "id": "epson-tm-t81",         "group": "printer", "name": "Epson TM-T81", "patterns": ["TM-T81", "T81II", "EPSON"] },
+    { "id": "xprinter-q260",        "group": "printer", "name": "Xprinter Q260", "patterns": ["Xprinter", "XP-80", "Q260", "XP-Q", "POS80"] },
+    { "id": "sprt-80mm",            "group": "printer", "name": "SPRT 80mm", "patterns": ["SPRT", "POS88", "SP-POS", "80mm Series"] },
+    { "id": "hanel-hn212",          "group": "device",  "name": "Hanel HN212 (doc CCCD)", "patterns": ["Hanel", "HN212", "IdCard"] },
+    { "id": "barcode-icw97201",     "group": "device",  "name": "May quet ma ICW97201", "patterns": ["ICW97201", "ICW"] },
+    { "id": "barcode-zebra-ds9308", "group": "device",  "name": "May quet ma Zebra DS9308", "patterns": ["DS9308", "Zebra"] },
+    { "id": "ricoh-fi-800r",        "group": "device",  "name": "May scan Ricoh fi-800R", "patterns": ["fi-800R", "fi800R", "Ricoh"] },
+    { "id": "brother-ads-1300",     "group": "device",  "name": "May scan Brother ADS-1300", "patterns": ["ADS-1300", "ADS1300"] },
+    { "id": "avision-av332u",       "group": "device",  "name": "May scan Avision AV332U", "patterns": ["AV332U", "Avision"] },
+    { "id": "brother-hl-l2361dn",   "group": "device",  "name": "May in A4 Brother HL-L2361DN", "patterns": ["HL-L2361D", "HL-L2360D", "HL-L236"] }
 ]

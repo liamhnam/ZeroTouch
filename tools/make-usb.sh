@@ -71,7 +71,7 @@ else
         if [ ! -f "$wim" ]; then
             command -v wimlib-imagex >/dev/null || die "wimlib is required: brew install wimlib"
             echo "Converting install.esd to install.wim (first run only, takes a while)..."
-            wimlib-imagex export "$iso_mount/sources/install.esd" 1 "$wim.tmp" --compress=maximum --check
+            wimlib-imagex export "$iso_mount/sources/install.esd" 1 "$wim.tmp" --compress=maximum
             mv "$wim.tmp" "$wim"
         fi
     else
@@ -86,10 +86,11 @@ else
             command -v wimlib-imagex >/dev/null || die "wimlib is required: brew install wimlib"
             echo "Splitting install.wim for FAT32..."
             rm -rf "$swm_dir"; mkdir -p "$swm_dir"
-            wimlib-imagex split "$wim" "$swm_dir/install.swm" "$SWM_SIZE_MB" --check
+            wimlib-imagex split "$wim" "$swm_dir/install.swm" "$SWM_SIZE_MB"
         fi
         image_files=("$swm_dir"/install*.swm)
     fi
+
 fi
 
 # --- Optional parts ---

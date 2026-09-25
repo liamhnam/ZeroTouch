@@ -100,6 +100,8 @@ def main():
     # The generator embeds the full query (incl. our scripts) as a comment; drop it.
     xml = re.sub(r'<!--https://schneegans\.de/windows/unattend-generator/\?.*?-->\s*', '', xml, count=1, flags=re.S)
     xml = xml.replace(PLACEHOLDER, USERNAME)
+    xml = xml.replace('<HideOnlineAccountScreens>false</HideOnlineAccountScreens>',
+                      '<HideOnlineAccountScreens>true</HideOnlineAccountScreens>\n\t\t\t\t<HideLocalAccountScreen>true</HideLocalAccountScreen>\n\t\t\t\t<HideOEMRegistrationScreen>true</HideOEMRegistrationScreen>')
 
     out = ROOT / 'dist' / 'autounattend.xml'
     out.parent.mkdir(exist_ok=True)
