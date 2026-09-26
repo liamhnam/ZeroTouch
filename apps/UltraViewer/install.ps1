@@ -21,9 +21,10 @@ if (-not $exe) { throw 'UltraViewer_Desktop.exe not found after setup' }
 if (-not (Get-Process -Name 'UltraViewer_Desktop' -ErrorAction 'SilentlyContinue')) {
     Start-Process -FilePath $exe
 }
-$id = ''
-# Chi doi lay ID khi may da co ket noi Internet, toi da 15 giay (tranh treo 60 giay neu offline)
-if ($Context.Inventory.WifiStatus -eq 'CONNECTED') {
+# Chi doi lay ID khi may da co ket noi Internet (Wi-Fi hoac LAN), toi da 15 giay (tranh treo 60 giay neu offline)
+$isOnline = ($Context.Inventory.WifiStatus -eq 'CONNECTED') -or
+    (try { Test-Connection -ComputerName '1.1.1.1' -Count 1 -Quiet -ErrorAction 'SilentlyContinue' } catch { $false })
+if ($isOnline) {
     for ($i = 0; $i -lt 5 -and -not $id; $i++) {
         Start-Sleep -Seconds 3
         $id = [string] (Get-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\WOW6432Node\UltraViewer' -ErrorAction 'SilentlyContinue').PreferID

@@ -38,17 +38,53 @@ if (-not $sdio) {
     return @{ Status = 'SKIP'; Detail = "No SDIO or staged driver packages found" }
 }
 
-if ($missing.Count -eq 0) {
-    Write-Host "All devices already working. SDIO skipped." -ForegroundColor Green
+$hasBasicDisplay = [bool](Get-PnpDevice -Class 'Display' -PresentOnly -ErrorAction 'SilentlyContinue' |
+    Where-Object { $_.FriendlyName -match 'Basic Display|Standard VGA' })
+
+if ($missing.Count -eq 0 -and -not $hasBasicDisplay) {
+    Write-Host "All devices already working with manufacturer drivers. SDIO skipped." -ForegroundColor Green
     return @{ Status = 'OK'; Detail = "All devices working. SDIO skipped." }
 }
 
-# Run SDIO if missing devices remain
-Write-Host "SDIO pass - $($sdio.Name) (resolving $($missing.Count) remaining devices)"
+# Run SDIO if missing devices or generic basic display remain
+$statusReason = if ($hasBasicDisplay) {
+    "$($missing.Count) device(s) and VGA (Basic Display) remaining"
+} else {
+    "$($missing.Count) device(s) remaining"
+}
+Write-Host "SDIO pass - $($sdio.Name) (resolving $statusReason, fast extract to SSD)..." -ForegroundColor Cyan
+
+# Create fast scratch directory on SSD to eliminate USB 2.0/3.0 write bottleneck
+$fastTemp = 'C:\ZeroTouch\temp'
+$null = New-Item -ItemType Directory -Force -Path $fastTemp -ErrorAction 'SilentlyContinue'
+
+$sdioArgs = @(
+    '-autoinstall',
+    '-autoclose',
+    '-license',
+    '-norestorepnt',
+    "-extractdir:$fastTemp",
+    '-nogui'
+)
+
 $process = Start-Process -FilePath $sdio.FullName -WorkingDirectory $sdio.DirectoryName -Wait -PassThru `
-    -ArgumentList @('-autoinstall', '-autoclose', '-license', '-norestorepnt')
+    -ArgumentList $sdioArgs
 Write-Host "SDIO exit code $($process.ExitCode)"
+
+# Cleanup temp extract folder to free SSD space
+Remove-Item -LiteralPath $fastTemp -Recurse -Force -ErrorAction 'SilentlyContinue'
+
 pnputil.exe /scan-devices | Out-Host
 
+$hasBasicDisplay = [bool](Get-PnpDevice -Class 'Display' -PresentOnly -ErrorAction 'SilentlyContinue' |
+    Where-Object { $_.FriendlyName -match 'Basic Display|Standard VGA' })
 $missing = @(Get-PnpDevice -PresentOnly -ErrorAction 'SilentlyContinue' | Where-Object { $_.Status -ne 'OK' })
-return @{ Status = 'OK'; Detail = "$($sdio.Name), $($missing.Count) device(s) still without driver" }
+
+$detail = "$($sdio.Name), $($missing.Count) device(s) still without driver"
+if ($hasBasicDisplay) {
+    $detail += " (VGA: Basic Display)"
+} else {
+    $gpu = Get-PnpDevice -Class 'Display' -PresentOnly -ErrorAction 'SilentlyContinue' | Select-Object -First 1
+    if ($gpu) { $detail += " (VGA: $($gpu.FriendlyName))" }
+}
+return @{ Status = 'OK'; Detail = $detail }

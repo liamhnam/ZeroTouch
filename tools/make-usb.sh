@@ -102,6 +102,7 @@ has_sdio=0; ls "$ROOT"/drivers/sdio/SDIO_x64_R*.exe >/dev/null 2>&1 && has_sdio=
 has_inject=0; [ -n "$(find "$ROOT/drivers/inject" -iname '*.inf' -print -quit)" ] && has_inject=1
 secret() { [ -f "$ROOT/secrets.env" ] && sed -n "s/^[[:space:]]*$1[[:space:]]*=[[:space:]]*//p" "$ROOT/secrets.env" | tail -1 | sed 's/[[:space:]]*$//'; }
 wifi_ssid="$(secret WIFI_SSID || true)"
+peripherals_cfg="$(secret PERIPHERALS || true)"
 
 # --- FAT32 and capacity checks ---
 check_paths=("$iso_mount" "${image_files[@]}" "$ROOT/apps" "$ROOT/peripherals")
@@ -125,6 +126,7 @@ echo "Image:  $(for f in "${image_files[@]}"; do printf '%s ' "$(basename "$f")"
 echo "Apps:   ${apps[*]:-none}"
 echo "SDIO:   $([ $has_sdio = 1 ] && echo yes || echo 'NO - drivers will not be installed (see drivers/sdio/README.md)')"
 echo "Wi-Fi:  ${wifi_ssid:-none (secrets.env missing)}"
+echo "Peripherals: ${peripherals_cfg:-auto-detect plugged USB devices}"
 echo "Inject: $([ $has_inject = 1 ] && find "$ROOT/drivers/inject" -iname '*.inf' -exec dirname {} \; | xargs -n1 basename | sort -u | tr '\n' ' ' || echo none)"
 if [ -n "$DISK" ]; then
     echo "USB:    /dev/$DISK - $(field 'Device / Media Name'), $((size_bytes / 1000000000)) GB"
@@ -160,6 +162,9 @@ done
 echo "Copying peripherals..."
 mkdir -p "$target/AutoInstaller/peripherals"
 rsync -r --exclude '.gitignore' "$ROOT/peripherals/" "$target/AutoInstaller/peripherals/"
+if [ -n "$peripherals_cfg" ]; then
+    printf '%s\n' "$peripherals_cfg" > "$target/AutoInstaller/peripherals/config.txt"
+fi
 if [ $has_sdio = 1 ]; then
     echo "Copying SDIO..."
     mkdir -p "$target/AutoInstaller/sdio"

@@ -425,9 +425,9 @@ function Create-Card {
         $indicatorBox.BorderThickness = New-Object System.Windows.Thickness(2)
 
         $check = New-Object System.Windows.Controls.TextBlock
-        $check.Text = "[x]"
+        $check.Text = [char]0x2713
         $check.FontWeight = [System.Windows.FontWeights]::Bold
-        $check.FontSize = 13
+        $check.FontSize = 15
         $check.Foreground = [System.Windows.Media.Brushes]::White
         $check.HorizontalAlignment = [System.Windows.HorizontalAlignment]::Center
         $check.VerticalAlignment = [System.Windows.VerticalAlignment]::Center
@@ -590,6 +590,11 @@ $btnClose.Add_Click({
 
 # Install button
 $btnInstall.Add_Click({
+    if ($script:isInstalledSuccessfully) {
+        $window.Close()
+        return
+    }
+
     $chosenPrinter = $script:printerCards | Where-Object { $_.Tag.IsChecked -and $_.Tag.Id } | Select-Object -First 1
     $chosenDevices = $script:deviceCards  | Where-Object { $_.Tag.IsChecked }
 
@@ -630,6 +635,7 @@ $btnInstall.Add_Click({
     $btnClose.IsEnabled = $true
 
     if ($failed) {
+        $script:isInstalledSuccessfully = $false
         $txtProgressStatus.Text = "Cai dat co loi o mot so thiet bi. Xem nhat ky ben duoi."
         $txtProgressStatus.Foreground = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#EF4444")
         $btnInstall.Content = "CO LOI - BAM DE THU LAI"
@@ -637,12 +643,12 @@ $btnInstall.Add_Click({
         $btnInstall.IsEnabled = $true
         $btnRescan.IsEnabled = $true
     } else {
+        $script:isInstalledSuccessfully = $true
         $txtProgressStatus.Text = "Toan bo thiet bi da duoc cai dat thanh cong!"
         $txtProgressStatus.Foreground = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#4ADE80")
         $btnInstall.Content = "DA HOAN TAT - BAM DE DONG"
         $btnInstall.Background = $brushSuccess
         $btnInstall.IsEnabled = $true
-        $btnInstall.Add_Click({ $window.Close() })
     }
 })
 
